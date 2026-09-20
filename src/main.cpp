@@ -122,7 +122,7 @@ static bool wakePowerReleasePending = false;
 // Fonts
 // All legacy built-in reader IDs share one 12pt offline fallback. Complete
 // families, other sizes, and style variants come from SD .cpfont files.
-EpdFont offlineReaderFont(&notosans_cjk_12);
+EpdFont offlineReaderFont(&misans_cjk_12);
 EpdFontFamily offlineReaderFontFamily(&offlineReaderFont);
 
 // International UI fonts remain primary; CJK subsets are selected only when
@@ -138,19 +138,20 @@ EpdFont ui12MediumFont(&ubuntu_12_medium);
 EpdFont ui12BoldFont(&ubuntu_12_bold);
 EpdFontFamily ui12FontFamily(&ui12MediumFont, &ui12BoldFont);
 
-EpdFont cjk8Font(&notosans_cjk_8);
+EpdFont cjk8Font(&misans_cjk_8);
 EpdFontFamily cjk8FontFamily(&cjk8Font);
-EpdFont cjk10Font(&notosans_cjk_10);
+EpdFont cjk10Font(&misans_cjk_10);
 EpdFontFamily cjk10FontFamily(&cjk10Font);
-EpdFont cjk12Font(&notosans_cjk_12);
+EpdFont cjk12Font(&misans_cjk_12);
 EpdFontFamily cjk12FontFamily(&cjk12Font);
+
+// 汉字钟专用 72pt 内置字体（12 汉字：零一二三四五六七八九十时）
+EpdFont zen72Font(&zen72);
+EpdFontFamily zen72FontFamily(&zen72Font);
 constexpr int CJK_UI_8_FONT_ID = 0x434A4B08;
 constexpr int CJK_UI_10_FONT_ID = 0x434A4B0A;
 constexpr int CJK_UI_12_FONT_ID = 0x434A4B0C;
-
-// Chinese chess piece glyphs (subset CJK font, 14 characters at 16pt).
-EpdFont chineseChessPieceFont(&chinese_chess_16);
-EpdFontFamily chineseChessPieceFontFamily(&chineseChessPieceFont);
+constexpr int ZEN_72_FONT_ID = 0x434A4B48;  // "CJKH" = CJK 72pt
 
 // measurement of power button press duration calibration value
 unsigned long t1 = 0;
@@ -409,11 +410,11 @@ bool setupDisplayAndFonts(bool seamless = false, bool logSdFontLoadHeap = false)
   renderer.insertFont(CJK_UI_8_FONT_ID, cjk8FontFamily);
   renderer.insertFont(CJK_UI_10_FONT_ID, cjk10FontFamily);
   renderer.insertFont(CJK_UI_12_FONT_ID, cjk12FontFamily);
+  renderer.insertFont(ZEN_72_FONT_ID, zen72FontFamily);
   renderer.setFallbackFont(SMALL_FONT_ID, CJK_UI_8_FONT_ID);
   renderer.setFallbackFont(UI_10_FONT_ID, CJK_UI_10_FONT_ID);
   renderer.setFallbackFont(UI_12_FONT_ID, CJK_UI_12_FONT_ID);
   renderer.insertFont(BaseTheme::STATUS_NUMERIC_FONT_ID, smallFontFamily);
-  renderer.insertFont(CHINESE_CHESS_FONT_ID, chineseChessPieceFontFamily);
 
   // Discover and load SD card fonts
   if (logSdFontLoadHeap) {
@@ -435,12 +436,12 @@ void continueChineseFontInstall(const uint8_t expectedPointSize) {
   }
 
   const bool fontReady =
-      strcmp(SETTINGS.sdFontFamilyName, SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY) == 0 &&
+      strcmp(SETTINGS.sdFontFamilyName, SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY) == 0 &&
       SETTINGS.fontPointSize == expectedPointSize &&
-      sdFontSystem.resolveFontId(SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY, expectedPointSize) != 0;
+      sdFontSystem.resolveFontId(SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY, expectedPointSize) != 0;
   if (!fontReady) {
     LOG_ERR("FONT", "Failed to load selected family %s at point size %u after clean restart",
-            SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY, static_cast<unsigned>(expectedPointSize));
+            SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY, static_cast<unsigned>(expectedPointSize));
     SETTINGS.clearSdFontFamily();
     SETTINGS.fontPointSize = expectedPointSize;
     if (!SETTINGS.saveToFile()) LOG_ERR("FONT", "Failed to restore reader point size after font load failure");

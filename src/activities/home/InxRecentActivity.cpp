@@ -290,10 +290,10 @@ bool InxRecentActivity::drawBookCover(const int bookIndex, const Rect& bounds) {
   const auto size = InxCoverGeometry::fit(bounds.width, bounds.height);
   const int x = bounds.x + (bounds.width - size.width) / 2;
   const int y = bounds.y + (bounds.height - size.height) / 2;
+  // CrossMux 精简：无封面占位图改为白底 + 居中书本图标
   renderer.drawRect(x, y, size.width, size.height, 2, true);
-  renderer.fillRect(x, y + size.height / 3, size.width, size.height * 2 / 3);
   constexpr int iconSize = 32;
-  renderer.drawIcon(CoverIcon, x + (size.width - iconSize) / 2, y + size.height / 6 - iconSize / 2, iconSize);
+  renderer.drawIcon(CoverIcon, x + (size.width - iconSize) / 2, y + (size.height - iconSize) / 2, iconSize);
   return false;
 }
 

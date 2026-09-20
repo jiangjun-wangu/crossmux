@@ -109,11 +109,7 @@ void formatDayPillar(const AlmanacDay& d, char* buf, size_t sz) {
                 chinese_almanac::kBranchNames[d.dayBranchIdx]);
 }
 
-void formatClash(const AlmanacDay& d, char* buf, size_t sz) {
-  // "未羊"  (rendered with "冲" prefix at the call site)
-  std::snprintf(buf, sz, "%s%s", chinese_almanac::kBranchNames[d.clashBranchIdx],
-                chinese_almanac::kZodiacNames[d.clashBranchIdx]);
-}
+// formatClash 已删除（CrossMux 精简：相冲功能移除）
 
 // Draw a row of inline tokens (same font) centred horizontally in the viewport.
 // `gapPx` is the literal pixel spacer between adjacent tokens.
@@ -138,43 +134,12 @@ int verticalCenterY(const GfxRenderer& renderer, int fontId, int bandY, int heig
 }
 
 // 宜 / 忌 card: black header strip with white label + 2×2 grid of body items.
-void drawYiJiBox(const GfxRenderer& renderer, int x, int y, int w, int h, const char* headerLabel,
-                 const char* const items[4]) {
-  constexpr int kHeaderH = 36;
-  constexpr int kBorderW = 1;
-  constexpr int kLabelFont = NOTOSANS_12_FONT_ID;
-  constexpr int kItemFont = NOTOSANS_12_FONT_ID;
-  constexpr int kBodyRows = 2;
-  constexpr int kBodyCols = 2;
-
-  renderer.drawRect(x, y, w, h, kBorderW, true);
-  renderer.fillRect(x, y, w, kHeaderH, /*state=*/true);
-  renderer.drawLine(x, y + kHeaderH, x + w - 1, y + kHeaderH, true);
-
-  const int labelW = renderer.getTextWidth(kLabelFont, headerLabel);
-  const int labelY = verticalCenterY(renderer, kLabelFont, y, kHeaderH);
-  renderer.drawText(kLabelFont, x + (w - labelW) / 2, labelY, headerLabel, /*black=*/false);
-
-  const int bodyTop = y + kHeaderH;
-  const int rowH = (h - kHeaderH) / kBodyRows;
-  const int colW = w / kBodyCols;
-  for (int row = 0; row < kBodyRows; ++row) {
-    for (int col = 0; col < kBodyCols; ++col) {
-      const char* item = items[row * kBodyCols + col];
-      const int textW = renderer.getTextWidth(kItemFont, item);
-      const int cellY = bodyTop + row * rowH;
-      const int cx = x + col * colW + (colW - textW) / 2;
-      const int cy = verticalCenterY(renderer, kItemFont, cellY, rowH);
-      renderer.drawText(kItemFont, cx, cy, item, /*black=*/true);
-    }
-  }
-}
+// drawYiJiBox 已删除（CrossMux 精简）
 
 // Renders the full almanac page within `viewport`. Caller has already
 // cleared the screen.  `heroStyle`/`heroSeeds` parameterize SloppyDigits
 // rendering of the big公历日 digit.
-void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacDay& day, const sloppy::Style& heroStyle,
-                     const sloppy::Seeds& heroSeeds) {
+void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacDay& day) {
   const int vw = viewport.width;
   const int vh = viewport.height;
   if (vw <= 0 || vh <= 0) return;
@@ -198,15 +163,17 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     drawCenteredRow(renderer, NOTOSANS_14_FONT_ID, viewport, viewport.y + 80, row, 2, /*gap=*/40);
   }
 
-  // Hero day digit — SloppyDigits fits to the bounding rect; width-bound.
+  // Hero day digit — 用内置 72pt 字体渲染（原 SloppyDigits 手绘风格已替换）
   {
-    const int heroW = static_cast<int>(vw * kHeroWidthRatio);
-    const int heroH = static_cast<int>(vh * kHeroHeightRatio);
-    const int heroX = viewport.x + (vw - heroW) / 2;
-    const int heroY = viewport.y + static_cast<int>(vh * kHeroTopRatio);
     char buf[4];
     std::snprintf(buf, sizeof(buf), "%u", static_cast<unsigned>(day.gregDay));
-    sloppy::draw(renderer, heroStyle, heroSeeds, buf, sloppy::Bounds{heroX, heroY, heroW, heroH});
+    // ZEN_72_FONT_ID 定义在 main.cpp
+    constexpr int kZen72FontId = 0x434A4B48;
+    const int textW = renderer.getTextWidth(kZen72FontId, buf);
+    const int textH = renderer.getFontAscenderSize(kZen72FontId);
+    const int heroX = viewport.x + (vw - textW) / 2;
+    const int heroY = viewport.y + static_cast<int>(vh * kHeroTopRatio);
+    renderer.drawText(kZen72FontId, heroX, heroY, buf, true);
   }
 
   // Bold divider — sits on the screen's vertical midline.
@@ -244,15 +211,7 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
                     /*gap=*/8);
   }
 
-  // 宜 / 忌 cards.
-  {
-    const int boxW = (vw - kBoxSidePad * 2 - kBoxGap) / 2;
-    const int boxY = viewport.y + static_cast<int>(vh * kBoxTopYRatio);
-    drawYiJiBox(renderer, viewport.x + kBoxSidePad, boxY, boxW, kBoxHeight, tr(STR_CAL_YI),
-                chinese_almanac::kYiPool[day.yiIdx % 12]);
-    drawYiJiBox(renderer, viewport.x + kBoxSidePad + boxW + kBoxGap, boxY, boxW, kBoxHeight, tr(STR_CAL_JI),
-                chinese_almanac::kJiPool[day.jiIdx % 12]);
-  }
+  // 宜/忌卡片已删除（CrossMux 精简）
 
   // Footer:  hairline + "日柱 辛卯 · 冲未羊"
   {
@@ -260,13 +219,10 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     renderer.drawLine(viewport.x + 24, footerLineY, viewport.x + vw - 24, footerLineY, true);
 
     char dayPillar[16];
-    char clashBuf[16];
     formatDayPillar(day, dayPillar, sizeof(dayPillar));
-    formatClash(day, clashBuf, sizeof(clashBuf));
 
     char leftBuf[64];
-    std::snprintf(leftBuf, sizeof(leftBuf), "%s %s %s %s%s", tr(STR_CAL_DAY_PILLAR_LABEL), dayPillar, kDot,
-                  tr(STR_CAL_CLASH_LABEL), clashBuf);
+    std::snprintf(leftBuf, sizeof(leftBuf), "%s %s", tr(STR_CAL_DAY_PILLAR_LABEL), dayPillar);
     renderer.drawText(SMALL_FONT_ID, viewport.x + 24, viewport.y + vh - kFooterTextFromBottom, leftBuf, /*black=*/true);
   }
 }
@@ -304,30 +260,17 @@ bool getTodayLocal(struct tm& out) {
 }  // namespace
 
 void ChineseCalendarFace::onEnter() {
-  heroStyle_ = makeUniqueNoThrow<sloppy::Style>();
-  heroSeeds_ = makeUniqueNoThrow<sloppy::Seeds>();
-  if (!heroStyle_ || !heroSeeds_) {
+  if (false) {
     LOG_ERR("STANDBY", "OOM allocating calendar hero state");
     return;
   }
 
   // Stable Geometric digits — zero jitter, max stroke.
-  heroStyle_->alphabet = sloppy::AlphabetId::Geometric;
-  heroStyle_->wobble = 0.0f;
-  heroStyle_->strokeWidth = 7;
-  heroStyle_->slantDeg = 0.0f;
-  heroStyle_->digitRotateMax = 0.0f;
-  heroStyle_->digitGap = 18;
-  heroStyle_->oneIsPlain = false;
-  sloppy::prepareSeeds(/*seed=*/1u, *heroStyle_, *heroSeeds_);
-
   dayOffset_ = 0;
   refreshCachedDay();
 }
 
 void ChineseCalendarFace::onExit() {
-  heroSeeds_.reset();
-  heroStyle_.reset();
   cacheValid_ = false;
 }
 
@@ -399,11 +342,10 @@ uint32_t ChineseCalendarFace::secondsUntilNextWake() const {
 }
 
 void ChineseCalendarFace::render(GfxRenderer& renderer, const Rect& viewport) {
-  if (!heroStyle_ || !heroSeeds_) return;
   if (!cacheValid_) {
     // Compute lazily if onEnter's first attempt failed (e.g. localtime not
     // yet ready). Best-effort: if it still fails, leave the page blank.
     if (!refreshCachedDay()) return;
   }
-  drawAlmanacPage(renderer, viewport, cachedDay_, *heroStyle_, *heroSeeds_);
+  drawAlmanacPage(renderer, viewport, cachedDay_);
 }

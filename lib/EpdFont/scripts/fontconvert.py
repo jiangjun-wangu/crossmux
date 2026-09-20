@@ -25,6 +25,8 @@ parser.add_argument("--compress", dest="compress", action="store_true", help="Co
 parser.add_argument("--zopfli", dest="zopfli", action="store_true", help="Use Zopfli for the DEFLATE backend instead of zlib. Produces standard raw-DEFLATE streams (decoded unchanged by the on-device uzlib inflater), typically a few percent smaller than zlib -9, at the cost of much slower compression. Requires --compress and the 'zopfli' package.")
 parser.add_argument("--force-autohint", dest="force_autohint", action="store_true", help="Force FreeType auto-hinter instead of native font hinting. Improves stem width consistency for fonts with weak or no native TrueType hints.")
 parser.add_argument("--autohint-font", dest="autohint_fonts", action="append", default=[], metavar="PATH", help="Force the FreeType auto-hinter on one face of the fontstack, named by its path. Repeatable. For stacks that mix a manually hinted face with unhinted ones, where --force-autohint would discard the hints the former does have.")
+parser.add_argument("--no-default-intervals", dest="no_default_intervals", action="store_true",
+                    help="Skip the built-in default interval set; only --additional-intervals are emitted.")
 parser.add_argument("--pnum", dest="pnum", action="store_true", help="Use proportional numerals (pnum OpenType feature) instead of default tabular figures. Reduces visual gaps between digits in running prose.")
 args = parser.parse_args()
 
@@ -60,7 +62,7 @@ for autohint_font in args.autohint_fonts:
 
 # inclusive unicode code point intervals
 # must not overlap and be in ascending order
-intervals = [
+_default_intervals = [
     ### Basic Latin ###
     # ASCII letters, digits, punctuation, control characters
     (0x0000, 0x007F),
@@ -154,6 +156,8 @@ intervals = [
     # Replacement Character
     (0xFFFD, 0xFFFD),
 ]
+
+intervals = [] if args.no_default_intervals else _default_intervals
 
 add_ints = []
 if args.additional_intervals:

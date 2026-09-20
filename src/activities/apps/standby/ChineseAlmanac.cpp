@@ -43,35 +43,9 @@ const char* const kLunarDayNames[30] = {
 // Yi/ji pools indexed by today's earthly branch (0..11). Activities are kept
 // to 2 CJK chars so they fit the 2×2 grid cells in the calendar face layout.
 // All chars are verified to be in the CN bitmap subset.
-const char* const kYiPool[12][4] = {
-    /* 子 */ {"祭典", "祈福", "出行", "入学"},
-    /* 丑 */ {"交易", "纳财", "开市", "立券"},
-    /* 寅 */ {"出行", "求医", "治病", "入学"},
-    /* 卯 */ {"会友", "美容", "沐浴", "结网"},
-    /* 辰 */ {"开市", "立券", "交易", "纳财"},
-    /* 巳 */ {"入学", "祭典", "求医", "祈福"},
-    /* 午 */ {"祭典", "祈福", "出行", "纳采"},
-    /* 未 */ {"嫁娶", "纳采", "结网", "纳财"},
-    /* 申 */ {"开市", "出行", "纳财", "立券"},
-    /* 酉 */ {"嫁娶", "祭典", "立券", "纳财"},
-    /* 戌 */ {"祭典", "祈福", "出行", "沐浴"},
-    /* 亥 */ {"嫁娶", "纳采", "入学", "求医"},
-};
+// kYiPool 已删除（CrossMux 精简：宜忌功能移除）
 
-const char* const kJiPool[12][4] = {
-    /* 子 */ {"动土", "嫁娶", "安葬", "破土"},
-    /* 丑 */ {"破土", "安葬", "嫁娶", "造作"},
-    /* 寅 */ {"嫁娶", "安葬", "动土", "破土"},
-    /* 卯 */ {"动土", "破土", "嫁娶", "安葬"},
-    /* 辰 */ {"破土", "安葬", "造作", "动土"},
-    /* 巳 */ {"安葬", "动土", "破土", "造作"},
-    /* 午 */ {"造作", "动土", "安葬", "嫁娶"},
-    /* 未 */ {"破土", "动土", "安葬", "出行"},
-    /* 申 */ {"嫁娶", "安葬", "造作", "破土"},
-    /* 酉 */ {"动土", "破土", "造作", "出行"},
-    /* 戌 */ {"嫁娶", "动土", "安葬", "破土"},
-    /* 亥 */ {"动土", "破土", "安葬", "造作"},
-};
+// kJiPool 已删除（CrossMux 精简：宜忌功能移除）
 
 }  // namespace chinese_almanac
 
@@ -671,11 +645,11 @@ bool computeAlmanac(const struct tm& t, AlmanacDay& out) {
   ganzhiDay(absDay, out.dayStemIdx, out.dayBranchIdx);
 
   // Yi/ji indexed by day branch.
-  out.yiIdx = out.dayBranchIdx;
-  out.jiIdx = out.dayBranchIdx;
+  // out.yiIdx 已删除
+  // out.jiIdx 已删除
 
   // 冲: opposite branch (6 apart).
-  out.clashBranchIdx = static_cast<uint8_t>((out.dayBranchIdx + 6u) % 12u);
+  // out.clashBranchIdx 已删除
   return true;
 }
 

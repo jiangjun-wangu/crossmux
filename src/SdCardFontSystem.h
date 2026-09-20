@@ -11,7 +11,7 @@ class GfxRenderer;
 /// Hides implementation details behind a single begin() + ensureLoaded() API.
 class SdCardFontSystem {
  public:
-  static constexpr const char* COMPLETE_CHINESE_NOTO_SANS_FAMILY = "NotoSansSC";
+  static constexpr const char* COMPLETE_CHINESE_MISANS_FAMILY = "MiSans";
 
   SdCardFontSystem() = default;
   SdCardFontSystem(const SdCardFontSystem&) = delete;
@@ -30,6 +30,10 @@ class SdCardFontSystem {
   /// Resolve an SD card font ID from family name + reader point size.
   /// Returns 0 if not found. Used by CrossPointSettings::getReaderFontId().
   int resolveFontId(const char* familyName, uint8_t pointSize) const;
+
+  /// 额外加载指定 family + pointSize 的 SD 字体（不影响当前 reader 字体）。
+  /// 用于禅意时钟等特殊 Activity。返回 fontId，失败返回 0。
+  int loadExtraFamily(const char* familyName, uint8_t pointSize, GfxRenderer& renderer);
 
   /// Access the registry (e.g. for settings UI to enumerate available fonts).
   const SdCardFontRegistry& registry() const { return registry_; }

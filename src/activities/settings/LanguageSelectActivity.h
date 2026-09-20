@@ -31,7 +31,8 @@ class LanguageSelectActivity final : public UiListActivity {
   void drawFooter() override;
   bool isOnboarding() const { return mode_ != Mode::Settings; }
 
-  constexpr static uint8_t totalItems = getLanguageCount();
+  // 只列出 SORTED_LANGUAGE_INDICES 里实际保留的语言（精简构建可能 < _COUNT）
+  constexpr static uint8_t totalItems = SORTED_LANGUAGE_COUNT;
 
   // Row storage: totalItems is a compile-time constant, so a fixed-capacity
   // array avoids any heap allocation for the row list. Built once in

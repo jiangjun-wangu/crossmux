@@ -285,11 +285,11 @@ void FontDownloadActivity::onWifiSelectionComplete(const bool success) {
 
 bool FontDownloadActivity::startAutomaticDownload() {
   const auto familyIt = std::find_if(families_.begin(), families_.end(), [](const auto& family) {
-    return family.name == SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY;
+    return family.name == SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY;
   });
   if (familyIt == families_.end()) {
     LOG_ERR("FONT", "Manifest does not contain required family %s",
-            SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY);
+            SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY);
     RenderLock lock(*this);
     state_ = ERROR;
     operation_ = DownloadOperation::None;
@@ -303,7 +303,7 @@ bool FontDownloadActivity::startAutomaticDownload() {
                   [this](const auto& file) { return file.pointSize == targetPointSize_; });
   if (!hasExactPointSize) {
     LOG_ERR("FONT", "Required family %s does not contain point size %u",
-            SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY, static_cast<unsigned>(targetPointSize_));
+            SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY, static_cast<unsigned>(targetPointSize_));
     RenderLock lock(*this);
     state_ = ERROR;
     operation_ = DownloadOperation::None;
@@ -542,7 +542,7 @@ void FontDownloadActivity::downloadAll() {
 
   const ManifestFamily* selected = nullptr;
   for (const auto& family : families_) {
-    if (family.installed && family.name == SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY) {
+    if (family.installed && family.name == SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY) {
       selected = &family;
       break;
     }

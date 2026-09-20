@@ -14,10 +14,7 @@
 #include "components/SelectionCursorPolicy.h"
 #include "components/themes/BaseTheme.h"
 #include "components/themes/inx/InxTheme.h"
-#include "components/themes/lyra/Lyra3CoversTheme.h"
-#include "components/themes/lyra/LyraCarouselTheme.h"
 #include "components/themes/lyra/LyraTheme.h"
-#include "components/themes/roundedraff/RoundedRaffTheme.h"
 
 UITheme UITheme::instance;
 
@@ -40,29 +37,15 @@ void UITheme::setTheme(CrossPointSettings::UI_THEME type) {
       nextTheme = makeUniqueNoThrow<BaseTheme>();
       break;
     case CrossPointSettings::UI_THEME::LYRA:
-      LOG_DBG("UI", "Using Lyra theme");
-      nextTheme = makeUniqueNoThrow<LyraTheme>();
-      nextMetrics = &LyraMetrics::values;
-      break;
     case CrossPointSettings::UI_THEME::ROUNDEDRAFF:
-      LOG_DBG("UI", "Using RoundedRaff theme");
-      nextTheme = makeUniqueNoThrow<RoundedRaffTheme>();
-      nextMetrics = &RoundedRaffMetrics::values;
-      break;
     case CrossPointSettings::UI_THEME::LYRA_3_COVERS:
-      LOG_DBG("UI", "Using Lyra 3 Covers theme");
-      nextTheme = makeUniqueNoThrow<Lyra3CoversTheme>();
-      nextMetrics = &Lyra3CoversMetrics::values;
-      break;
     case CrossPointSettings::UI_THEME::LYRA_CAROUSEL:
-      LOG_DBG("UI", "Using Lyra Carousel theme");
-      nextTheme = makeUniqueNoThrow<LyraCarouselTheme>();
-      nextMetrics = &LyraCarouselMetrics::values;
-      break;
     case CrossPointSettings::UI_THEME::INX:
-      LOG_DBG("UI", "Using INX theme");
+      // CrossMux 精简：只保留 CLASSIC + INX。其余设置值一律回落到 INX。
+      LOG_DBG("UI", "Using INX theme (requested type %d)", static_cast<int>(type));
       nextTheme = makeUniqueNoThrow<InxTheme>();
       nextMetrics = &InxMetrics::values;
+      type = CrossPointSettings::UI_THEME::INX;
       break;
     default:
       LOG_ERR("UI", "Unknown theme %d, falling back to Classic", static_cast<int>(type));

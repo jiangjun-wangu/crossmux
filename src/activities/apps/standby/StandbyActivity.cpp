@@ -27,8 +27,8 @@
 #ifdef ENABLE_CHINESE_VERSION
 #include "ChineseCalendarFace.h"
 #endif
-#include "SloppyClockFace.h"
 #include "StandbyTime.h"
+#include "ZenHomeFace.h"
 #include "WifiCredentialStore.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -52,8 +52,8 @@ struct FaceEntry {
   bool (*isAvailable)(int sw, int sh);
 };
 constexpr FaceEntry kFaces[] = {
-    {[]() -> std::unique_ptr<StandbyFace> { return makeUniqueNoThrow<SloppyClockFace>(); },
-     [](int, int) { return true; }},
+    {[]() -> std::unique_ptr<StandbyFace> { return makeUniqueNoThrow<ZenHomeFace>(); },
+     [](int sw, int sh) { return sh > sw; }},  // portrait only, default face
 #ifdef ENABLE_CHINESE_VERSION
     {[]() -> std::unique_ptr<StandbyFace> { return makeUniqueNoThrow<ChineseCalendarFace>(); },
      [](int sw, int sh) { return sh > sw; }},  // portrait only

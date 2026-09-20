@@ -84,7 +84,7 @@ def main() -> None:
     parser.add_argument(
         "--top",
         type=int,
-        default=3500,
+        default=6763,
         help="Number of characters to keep (default: 3500, the size of the "
         "现代汉语常用字表 pool), before adding --require-from characters. "
         "Lower this to shrink flash.",

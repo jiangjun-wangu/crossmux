@@ -37,6 +37,30 @@ import re
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+# ---- CrossMux 语言包精简 ----
+# 环境变量 CROSSPOINT_KEEP_LANGS（逗号分隔）指定保留字符串数据的语言。
+# 未设置或为空时保留全部（不影响原行为）。Language enum、LANGUAGE_CODES、
+# LANGUAGE_NAMES、CHARACTER_SETS 始终全保留（索引必须对应 enum），
+# 只有 STRINGS_*_DATA 和 OFFSETS_* 按需生成，未保留语言运行时回退 EN。
+import os as _os
+_KEEP_LANGS: Optional[Set[str]] = None
+
+def _load_keep_langs():
+    global _KEEP_LANGS
+    env = _os.environ.get("CROSSPOINT_KEEP_LANGS", "").strip()
+    if env:
+        _KEEP_LANGS = {c.strip().upper() for c in env.split(",") if c.strip()} | {"EN"}
+    else:
+        _KEEP_LANGS = None
+
+def _should_keep(lang_code: str) -> bool:
+    if _KEEP_LANGS is None:
+        return True
+    return lang_code.upper() in _KEEP_LANGS
+
+_load_keep_langs()
+
+
 
 # ---------------------------------------------------------------------------
 # YAML file reading (simple key: "value" format, no PyYAML dependency)
@@ -483,6 +507,8 @@ def generate_keys_header(
     ]
 
     for code in languages:
+        if not _should_keep(code):
+            continue
         lines.append(f"extern const char STRINGS_{code}_DATA[];")
         lines.append(f"extern const uint16_t OFFSETS_{code}[];")
 
@@ -534,6 +560,8 @@ def generate_keys_header(
     lines.append("inline LangStrings getLanguageStrings(Language lang) {")
     lines.append("  switch (lang) {")
     for code in languages:
+        if not _should_keep(code):
+            continue
         lines.append(f"    case Language::{code}:")
         lines.append(
             f"      return {{i18n_strings::STRINGS_{code}_DATA, i18n_strings::OFFSETS_{code}}};"
@@ -557,9 +585,11 @@ def generate_keys_header(
 
     # Sorted language indices for display order
     # (English first, then by _bcp47 tag alphabetically)
+    # 只列出被 _should_keep 保留的语言；Language enum 仍全保留，
+    # 未保留语言不会出现在语言选择界面。
     english_idx = languages.index("EN")
     rest = sorted(
-        (i for i in range(len(languages)) if i != english_idx),
+        (i for i in range(len(languages)) if i != english_idx and _should_keep(languages[i])),
         key=lambda i: language_bcp47[i],
     )
     sorted_indices = [english_idx] + rest
@@ -573,7 +603,17 @@ def generate_keys_header(
     )
     lines.append("")
     lines.append(
-        "static_assert(sizeof(SORTED_LANGUAGE_INDICES) / sizeof(SORTED_LANGUAGE_INDICES[0]) == getLanguageCount(),"
+        "// Number of entries in SORTED_LANGUAGE_INDICES. Equals Language::_COUNT when"
+    )
+    lines.append(
+        "// no CROSSPOINT_KEEP_LANGS filter is applied."
+    )
+    lines.append(
+        f"constexpr uint8_t SORTED_LANGUAGE_COUNT = {len(sorted_indices)};"
+    )
+    lines.append("")
+    lines.append(
+        "static_assert(sizeof(SORTED_LANGUAGE_INDICES) / sizeof(SORTED_LANGUAGE_INDICES[0]) == SORTED_LANGUAGE_COUNT,"
     )
     lines.append('              "SORTED_LANGUAGE_INDICES size mismatch");')
     lines.append("")
@@ -621,6 +661,8 @@ def generate_strings_header(
     ]
 
     for code in languages:
+        if not _should_keep(code):
+            continue
         lines.append(f"extern const char STRINGS_{code}_DATA[];")
         lines.append(f"extern const uint16_t OFFSETS_{code}[];")
 
@@ -664,11 +706,16 @@ def generate_strings_cpp(
     lines.append("")
 
     # CHARACTER_SETS array
+    # 数组长度必须 == Language::_COUNT（索引直接对应 enum），未保留语言
+    # 填空字符串以保持索引对齐。
     lines.append("// Character sets for each language")
     lines.append("const char* const CHARACTER_SETS[] = {")
-    for lang_idx, name in enumerate(language_names):
-        charset = compute_character_set(translations, lang_idx)
-        _append_string_entry(lines, charset, comment=name)
+    for lang_idx, (code, name) in enumerate(zip(languages, language_names)):
+        if not _should_keep(code):
+            _append_string_entry(lines, "", comment=f"{name} (skipped)")
+        else:
+            charset = compute_character_set(translations, lang_idx)
+            _append_string_entry(lines, charset, comment=name)
     lines.append("};")
     lines.append("")
 
@@ -682,6 +729,8 @@ def generate_strings_cpp(
     en_offsets: List[int] = []
 
     for lang_idx, code in enumerate(languages):
+        if not _should_keep(code):
+            continue
         lang_strings = [translations[key][lang_idx] for key in string_keys]
         is_english = lang_idx == 0
 
@@ -740,6 +789,8 @@ def generate_strings_cpp(
     # Compile-time size checks
     lines.append("// Compile-time validation of array sizes")
     for code in languages:
+        if not _should_keep(code):
+            continue
         lines.append(
             f"static_assert(sizeof(i18n_strings::OFFSETS_{code}) "
             f"/ sizeof(i18n_strings::OFFSETS_{code}[0]) =="
@@ -1046,8 +1097,12 @@ if __name__ == "__main__":
     )
 else:
     try:
-        Import("env")
-        print("[gen_i18n] unified firmware; building full i18n")
+        Import("env")  # noqa: F821 (SCons-injected global)
+        _pioenv = _os.environ.get("PIOENV", "")
+        # 模拟器与真机一致：只保留 EN + ZH_CN
+        _os.environ["CROSSPOINT_KEEP_LANGS"] = "EN,ZH_CN"
+        _load_keep_langs()
+        print(f"[gen_i18n] {_pioenv}: keeping only {sorted(_KEEP_LANGS)}")
         main(strip_unused=True)
     except NameError:
         pass

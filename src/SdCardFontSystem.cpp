@@ -145,17 +145,17 @@ void SdCardFontSystem::releaseLoadedFont(GfxRenderer& renderer) { manager_.unloa
 bool SdCardFontSystem::adoptCompleteChineseNotoSans() {
 #ifdef ENABLE_CHINESE_VERSION
   if (SETTINGS.contentProfile != CrossPointSettings::ContentProfile::China || SETTINGS.sdFontFamilyName[0] != '\0' ||
-      !registry_.findFamily(COMPLETE_CHINESE_NOTO_SANS_FAMILY))
+      !registry_.findFamily(COMPLETE_CHINESE_MISANS_FAMILY))
     return false;
 
-  strncpy(SETTINGS.sdFontFamilyName, COMPLETE_CHINESE_NOTO_SANS_FAMILY, sizeof(SETTINGS.sdFontFamilyName) - 1);
+  strncpy(SETTINGS.sdFontFamilyName, COMPLETE_CHINESE_MISANS_FAMILY, sizeof(SETTINGS.sdFontFamilyName) - 1);
   SETTINGS.sdFontFamilyName[sizeof(SETTINGS.sdFontFamilyName) - 1] = '\0';
   SETTINGS.fontFamily = CrossPointSettings::NOTOSANS;
   SETTINGS.sdFontFlashPreload = 0;
   if (!SETTINGS.saveToFile()) {
-    LOG_ERR("SDFS", "Failed to save automatic NotoSansSC selection");
+    LOG_ERR("SDFS", "Failed to save automatic MiSans selection");
   }
-  LOG_INF("SDFS", "Using installed NotoSansSC in place of the Chinese built-in font");
+  LOG_INF("SDFS", "Using installed MiSans in place of the Chinese built-in font");
   return true;
 #else
   return false;
@@ -217,4 +217,14 @@ int SdCardFontSystem::resolveFontId(const char* familyName, uint8_t /*pointSize*
   // SETTINGS.fontPointSize, so the size argument is implicit — always return
   // that font's ID. ensureLoaded() must have run for the current settings first.
   return manager_.getFontId(familyName);
+}
+
+int SdCardFontSystem::loadExtraFamily(const char* familyName, uint8_t pointSize, GfxRenderer& renderer) {
+  if (!familyName || !*familyName) return 0;
+  const auto* family = registry_.findFamily(familyName);
+  if (!family) {
+    LOG_DBG("SDFS", "loadExtraFamily: family '%s' not found", familyName);
+    return 0;
+  }
+  return manager_.loadFamilyExtraSize(*family, renderer, pointSize);
 }

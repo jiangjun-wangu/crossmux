@@ -130,7 +130,7 @@ echo "Subsetting $(basename "$SOURCE_OTF") → $(basename "$I18N_OTF") (i18n)...
 emit_size() {
   local size="$1"
   local otf="$2"
-  local font_name="notosans_cjk_${size}"
+  local font_name="misans_cjk_${size}"
   local output_path="../builtinFonts/${font_name}.h"
   # Write to a temp file first, then atomically mv on success. Otherwise a
   # crash in fontconvert.py leaves the target as a zero-byte file (the shell

@@ -24,7 +24,7 @@
 inline SettingInfo buildFontFamilySetting(const SdCardFontRegistry* registry) {
   std::vector<StrId> enumValues;
 #ifdef ENABLE_CHINESE_VERSION
-  if (!registry || !registry->findFamily(SdCardFontSystem::COMPLETE_CHINESE_NOTO_SANS_FAMILY)) {
+  if (!registry || !registry->findFamily(SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY)) {
     enumValues.push_back(StrId::STR_NOTO_SANS);
   }
 #else
@@ -225,10 +225,19 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
                           {StrId::STR_PAGES_1, StrId::STR_PAGES_5, StrId::STR_PAGES_10, StrId::STR_PAGES_15,
                            StrId::STR_PAGES_30, StrId::STR_NEVER},
                           "refreshFrequency", StrId::STR_CAT_DISPLAY),
-        SettingInfo::Enum(StrId::STR_UI_THEME, &CrossPointSettings::uiTheme,
-                          {StrId::STR_THEME_CLASSIC, StrId::STR_THEME_LYRA, StrId::STR_THEME_LYRA_EXTENDED,
-                           StrId::STR_THEME_ROUNDEDRAFF, StrId::STR_THEME_LYRA_CAROUSEL, StrId::STR_THEME_INX},
-                          "uiTheme", StrId::STR_CAT_DISPLAY),
+        // CrossMux 精简：UI 主题只保留 INX。valueGetter/valueSetter 拦截读写，
+        // 避免单项列表的索引 0 覆盖 uiTheme 存储值。
+        [] {
+          SettingInfo s;
+          s.nameId = StrId::STR_UI_THEME;
+          s.type = SettingType::ENUM;
+          s.enumValues = {StrId::STR_THEME_INX};
+          s.key = "uiTheme";
+          s.category = StrId::STR_CAT_DISPLAY;
+          s.valueGetter = []() -> uint8_t { return 0; };
+          s.valueSetter = [](uint8_t) { SETTINGS.uiTheme = CrossPointSettings::UI_THEME::INX; };
+          return s;
+        }(),
         SettingInfo::Enum(StrId::STR_INX_RECENT_LAYOUT, &CrossPointSettings::inxRecentLayout,
                           {StrId::STR_LAYOUT_FLOW, StrId::STR_LAYOUT_GRID, StrId::STR_LAYOUT_LIST,
                            StrId::STR_LAYOUT_ICONS, StrId::STR_COVER},

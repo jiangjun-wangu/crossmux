@@ -559,7 +559,7 @@ bool EpubReaderActivity::maybeOfferCompleteChineseFont() {
   const uint32_t codepoint = pendingMissingChineseCodepoint_.exchange(0, std::memory_order_relaxed);
   if (codepoint == 0 || FontDownloadActivity::wasChineseFontPromptShownThisBoot()) return false;
 
-  LOG_INF("FONT", "Missing built-in Chinese glyph U+%04X; offering automatic NotoSansSC install",
+  LOG_INF("FONT", "Missing built-in Chinese glyph U+%04X; offering automatic MiSans install",
           static_cast<unsigned>(codepoint));
   auto downloader =
       makeUniqueNoThrow<FontDownloadActivity>(renderer, mappedInput, FontDownloadActivity::Purpose::ReaderAutoInstall);

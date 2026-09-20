@@ -1,6 +1,5 @@
 #pragma once
 
-#include <SloppyDigits.h>
 
 #include <cstdint>
 #include <memory>
@@ -33,8 +32,6 @@ class ChineseCalendarFace final : public StandbyFace {
   void onPageNext() override;
 
  private:
-  std::unique_ptr<sloppy::Style> heroStyle_;
-  std::unique_ptr<sloppy::Seeds> heroSeeds_;
 
   // Day navigation: relative to today in the configured fixed offset.
   int32_t dayOffset_ = 0;

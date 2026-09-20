@@ -154,15 +154,22 @@ platformio run -e waveshare_epaper_397 -t upload
 
 > Flash 剩余不足 60 KB。任何代码改动前请先评估体积。
 
+## 设计说明：SD 字体不启用 preload
+
+preload 机制会把选中的 SD 字体拷贝到未激活的 OTA 槽，加速阅读翻页。
+本移植关闭该机制，原因：
+
+- 模拟器环境下 HalOtaSlot::inactive() 返回空，preload 直接拒绝
+- 真机 18pt cpfont（6.57 MB）超 6.55 MB 上限
+- 真机 12/14/16pt 理论可行，但会占用 OTA 槽，导致后续 OTA 升级失效
+- 本机 Flash 已用 99.1%，OTA 升级本就不可行，preload 的收益（e-ink 翻页
+  瓶颈在屏幕刷新）也有限
+
+当前策略：sdFontFlashPreload = 0，阅读走 SD 直读。
+
 ## 已知问题
 
-1. **SD 字体 preload 不可用**
-   - 模拟器：HalOtaSlot::inactive() 恒返回空
-   - 真机 18pt：cpfont 超 6.55 MB 上限
-   - 真机 12/14/16pt：理论可行，但会占用未激活 OTA 槽，导致 OTA 升级失效
-   - 当前策略：关闭 preload，走 SD 直读
-
-2. **真机未烧录实测**
+1. **真机未烧录实测**
    - 当前所有改动仅经模拟器验证
 
 ## 关键文件路径

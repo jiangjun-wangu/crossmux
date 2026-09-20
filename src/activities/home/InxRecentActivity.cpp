@@ -209,7 +209,10 @@ bool InxRecentActivity::tryDrawBookCover(const std::string& path, const Rect& bo
 #endif
   switch (state) {
     case CoverCacheState::Unchecked:
-      if (!Storage.exists(path.c_str())) {
+      // 只检查存在性不够：生成失败的缓存会留下截断的 BMP，
+      // 头合法但像素数据缺失，渲染到一半才 EOF。用 isValidBmp 一并校验。
+      if (!BookCoverLoader::isValidBmp(path)) {
+        Storage.remove(path.c_str());
         state = CoverCacheState::Missing;
         return false;
       }

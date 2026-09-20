@@ -162,12 +162,7 @@ platformio run -e waveshare_epaper_397 -t upload
    - 真机 12/14/16pt：理论可行，但会占用未激活 OTA 槽，导致 OTA 升级失效
    - 当前策略：关闭 preload，走 SD 直读
 
-2. **主页三体封面读取警告**
-   - 日志：[ERR] [GFX] Failed to read crop-fill row 0
-   - 原因：旧封面缓存格式不匹配
-   - 可清 fs_/.crosspoint/covers/ 重新生成
-
-3. **真机未烧录实测**
+2. **真机未烧录实测**
    - 当前所有改动仅经模拟器验证
 
 ## 关键文件路径

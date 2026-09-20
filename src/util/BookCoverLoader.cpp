@@ -13,6 +13,19 @@ namespace {
 
 enum class CachedCoverState { Missing, Ready, Terminal };
 
+// BMP header offsets: 0x02..0x05 = little-endian declared file size.
+// A truncated cache (writer aborted mid-stream) parses as a valid header but
+// leaves the pixel data short; downstream reads then fail row-by-row. Reject
+// when the declared size exceeds the on-disk size so the cache is regenerated.
+bool isTruncatedBmp(HalFile& file) {
+  if (file.fileSize() < 6) return true;
+  uint8_t hdr[6] = {};
+  if (!file.seek(0) || file.read(hdr, 6) != 6) return true;
+  const uint32_t declared = static_cast<uint32_t>(hdr[2]) | (static_cast<uint32_t>(hdr[3]) << 8) |
+                            (static_cast<uint32_t>(hdr[4]) << 16) | (static_cast<uint32_t>(hdr[5]) << 24);
+  return declared == 0 || declared > file.fileSize();
+}
+
 CachedCoverState inspectCachedCover(const std::string& path, const bool emptyIsTerminal) {
   if (!Storage.exists(path.c_str())) return CachedCoverState::Missing;
 
@@ -22,9 +35,12 @@ CachedCoverState inspectCachedCover(const std::string& path, const bool emptyIsT
     if (file.fileSize() == 0 && emptyIsTerminal) return CachedCoverState::Terminal;
 
     Bitmap bitmap(file);
-    if (bitmap.parseHeaders() == BmpReaderError::Ok && bitmap.getWidth() > 0 && bitmap.getHeight() > 0) {
+    if (bitmap.parseHeaders() == BmpReaderError::Ok && bitmap.getWidth() > 0 && bitmap.getHeight() > 0 &&
+        !isTruncatedBmp(file)) {
       return CachedCoverState::Ready;
     }
+    LOG_ERR("COVER", "Rejecting invalid/truncated cover cache: %s (size=%u)", path.c_str(),
+            static_cast<unsigned>(file.fileSize()));
   }
 
   if (!Storage.remove(path.c_str())) {
@@ -47,6 +63,18 @@ std::string ensureCachedCover(const std::string& path, const bool emptyIsTermina
 }
 
 }  // namespace
+
+bool isValidBmp(const std::string& path) {
+  if (!Storage.exists(path.c_str())) return false;
+  HalFile file;
+  if (!Storage.openFileForRead("COVER", path, file)) return false;
+  if (file.fileSize() < 6) return false;
+  uint8_t hdr[6] = {};
+  if (!file.seek(0) || file.read(hdr, 6) != 6) return false;
+  const uint32_t declared = static_cast<uint32_t>(hdr[2]) | (static_cast<uint32_t>(hdr[3]) << 8) |
+                            (static_cast<uint32_t>(hdr[4]) << 16) | (static_cast<uint32_t>(hdr[5]) << 24);
+  return declared != 0 && declared <= file.fileSize();
+}
 
 std::string ensureThumbnail(const std::string& bookPath, const int height, bool* generated) {
   if (generated) *generated = false;

@@ -199,3 +199,9 @@ platformio run -e waveshare_epaper_397 -t upload
 ## 许可与来源
 
 本仓库基于 [0x1abin/crossmux](https://github.com/0x1abin/crossmux)，后者是 [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) 的社区分支。许可条款以原项目为准。
+
+### MiSans 字体
+
+本移植使用小米 **MiSans** 字体作为内置中文字体。MiSans 字体采用《MiSans 字体知识产权许可协议》，允许免费商用，但要求在软件中特别注明使用了 MiSans 字体。本项目已在 README 中注明，符合许可条件。
+
+更多信息请访问 [MiSans 字体常见问题](https://hyperos.mi.com/font/faq)。

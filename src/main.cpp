@@ -575,7 +575,7 @@ void setup() {
   if (!Storage.begin()) {
     LOG_ERR("MAIN", "SD card initialization failed");
     const bool fontsReady = setupDisplayAndFonts(isSilentReboot);
-    activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
+    activityManager.goToFullScreenMessage(I18N.get(StrId::STR_SD_CARD_MISSING), EpdFontFamily::BOLD);
     activityManager.requestUpdateAndWait();
     if (otaPendingAtBoot && fontsReady) {
       if (HalOtaSlot::confirmRunningImage()) {

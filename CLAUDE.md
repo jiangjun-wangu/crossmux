@@ -59,7 +59,7 @@ sudo mount -t drvfs F: /mnt/f -o metadata,uid=1000,gid=1000,umask=022
 
 cd ~/crossmux
 source .venv/bin/activate
-python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 18,20,24 --style regular lib/EpdFont/builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf --output-dir /tmp/misans/
+python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18,20,22,24,26,28,30,32,34,36 --style regular lib/EpdFont/builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf --output-dir /tmp/misans/
 
 ### 生成内置字体（编译进固件）
 
@@ -124,6 +124,7 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 | 内置字体 | lib/EpdFont/builtinFonts/misans_cjk_*.h、zen72.h |
 | 字体生成 | lib/EpdFont/scripts/build-cn-builtin-fonts.sh |
 | SD 字体生成 | lib/EpdFont/scripts/fontconvert_sdcard.py |
+| SD 字体文档 | docs/misans-sd-fonts.md |
 | i18n 生成 | scripts/gen_i18n.py |
 | i18n 中文 | lib/I18n/translations/chinese.yaml |
 | i18n 英文 | lib/I18n/translations/english.yaml |
@@ -145,7 +146,7 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 
 ## 设计取舍（非 bug）
 
-- SD 字体 preload 不可用：模拟器 HalOtaSlot::inactive() 恒空；真机 18/20/24pt 超 6.55 MB 上限。走 SD 直读。
+- SD 字体 preload 不可用：模拟器 HalOtaSlot::inactive() 恒空；真机 20pt 及以上超 6.55 MB 上限。走 SD 直读。
 - 主页三体封面略糊：上游 JPEG 转换器 bug，87x146 尺寸失败。二级 fallback 到 226/300pt 版本正常显示。
 
 ## 安全红线

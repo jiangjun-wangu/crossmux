@@ -261,8 +261,10 @@ class GfxRenderer {
   // Non-inline: the host-test HalDisplay (crosspoint-simulator) lacks
   // isInverted(), and the header is compiled by test targets.
   bool isInverted() const;
-  // EXPERIMENTAL: Windowed update - display only a rectangular region
-  // void displayWindow(int x, int y, int width, int height) const;
+  // 窗口局部刷新（逻辑屏幕坐标；内部自动旋转到面板物理坐标 + 8 像素对齐 + 边界裁剪）
+  // 返回 false 表示区域为空或完全在屏幕外，此时不刷新。
+  // 注意：8 像素对齐会向外扩展区域。
+  bool displayWindow(int x, int y, int width, int height) const;
   void invertScreen() const;
   void clearScreen(uint8_t color = 0xFF) const;
   void getOrientedViewableTRBL(int* outTop, int* outRight, int* outBottom, int* outLeft) const;

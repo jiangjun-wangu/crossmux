@@ -1776,6 +1776,19 @@ void GfxRenderer::invertScreen() const {
   }
 }
 
+bool GfxRenderer::displayWindow(int x, int y, int width, int height) const {
+#ifdef SIMULATOR
+  // 模拟器 HalDisplay 是即时全屏渲染，接口用逻辑坐标、无需 8 像素对齐
+  display.displayWindow(x, y, width, height);
+  return true;
+#else
+  const AlignedMemRect r = screenRectToAlignedMemRect(orientation, x, y, width, height, panelWidth, panelHeight);
+  if (!r.valid) return false;
+  display.displayPartialWindow(r.x, r.y, r.w, r.h, false);
+  return true;
+#endif
+}
+
 void GfxRenderer::displayBuffer(HalDisplay::RefreshMode refreshMode, DisplayRefreshContext context) const {
   auto elapsed = millis() - start_ms;
   LOG_DBG("GFX", "Time = %lu ms from clearScreen to displayBuffer", elapsed);

@@ -29,6 +29,7 @@
 #include "fontIds.h"
 #include "util/AchievementPopupUtils.h"
 #include "util/ReadingBackground.h"
+#include "util/PageTurnAnimator.h"
 #include "util/ReadingGuideLine.h"
 
 namespace {
@@ -127,10 +128,12 @@ bool TxtReaderActivity::pageTurn(const bool isForward) {
   if (pageMode == PageMode::Indexed) {
     if (!isForward && currentPage > 0) {
       currentPage--;
+      pendingPageTurnAnim = true;
       return true;
     }
     if (isForward && static_cast<size_t>(currentPage + 1) < pageOffsets.size()) {
       currentPage++;
+      pendingPageTurnAnim = true;
       return true;
     }
     if (isForward && indexComplete) endOfBook = true;
@@ -144,10 +147,12 @@ bool TxtReaderActivity::pageTurn(const bool isForward) {
       pageMode = PageMode::Indexed;
       currentPage = directReturnPage;
     }
+    pendingPageTurnAnim = true;
     return true;
   }
   if (directPageIndex + 1 < directPageCount) {
     directPageIndex++;
+    pendingPageTurnAnim = true;
     return true;
   }
   if (currentPageEndOffset >= txt->getFileSize()) {
@@ -161,6 +166,7 @@ bool TxtReaderActivity::pageTurn(const bool isForward) {
     std::move(directPageOffsets.begin() + 1, directPageOffsets.end(), directPageOffsets.begin());
     directPageOffsets.back() = currentPageEndOffset;
   }
+  pendingPageTurnAnim = true;
   return true;
 }
 
@@ -768,11 +774,30 @@ void TxtReaderActivity::renderPage() {
     ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
   }
 #else
-  // Other devices keep the upstream behavior: show the BW frame first, then
-  // the gray pass.
-  ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
-  if (SETTINGS.textAntiAliasing) {
-    ReaderUtils::renderAntiAliased(renderer, [&renderLines]() { renderLines(); });
+  const bool animEligible =
+      pendingPageTurnAnim && SETTINGS.pageTurnAnimMode != CrossPointSettings::PAGE_TURN_OFF;
+  pendingPageTurnAnim = false;
+  PageTurnAnimator::Result animResult = PageTurnAnimator::NOT_RUN;
+  if (animEligible) {
+    const auto cancelCheck = [this]() { return mappedInput.wasAnyPressed(); };
+    const auto animMode = (SETTINGS.pageTurnAnimMode == CrossPointSettings::PAGE_TURN_BLINDS)
+                              ? PageTurnAnimator::BLINDS
+                              : PageTurnAnimator::SCROLL;
+    const auto animSpeed = static_cast<PageTurnAnimator::Speed>(SETTINGS.pageTurnAnimSpeed);
+    animResult = pageTurnAnimator.animate(renderer, animMode, animSpeed, cancelCheck);
+  }
+  if (animResult == PageTurnAnimator::COMPLETED) {
+    if (pagesUntilFullRefresh > 1) pagesUntilFullRefresh--;
+    pageTurnAnimator.noteFullRefresh();
+  } else if (animResult == PageTurnAnimator::CANCELLED) {
+    renderer.displayBuffer(HalDisplay::HALF_REFRESH, DisplayRefreshContext::ContinuousReading);
+    pagesUntilFullRefresh = SETTINGS.getRefreshFrequency();
+    pageTurnAnimator.noteFullRefresh();
+  } else {
+    ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
+    if (SETTINGS.textAntiAliasing) {
+      ReaderUtils::renderAntiAliased(renderer, [&renderLines]() { renderLines(); });
+    }
   }
 #endif
   const auto tDisplay = millis();

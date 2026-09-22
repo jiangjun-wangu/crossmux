@@ -10,6 +10,7 @@
 class XtcReaderActivity final : public ReaderActivity {
   std::shared_ptr<Xtc> xtc;
   uint32_t currentPage = 0;
+  bool pendingPageTurnAnim = false;  // 本次渲染是一次翻页，可尝试动画
 
   enum class StatusBarOverlayPosition { Bottom, Top };
   struct StatusBarInfo {

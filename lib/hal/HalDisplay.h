@@ -41,6 +41,9 @@ class HalDisplay {
 
   void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false,
                      DisplayRefreshContext context = DisplayRefreshContext::Normal);
+
+  // 窗口局部刷新（物理面板坐标；x 和 w 必须 8 像素对齐，越界会被下层驱动拒绝）。
+  void displayPartialWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool turnOffScreen = false);
   // Non-blocking refresh (shadow-free): starts the panel waveform and returns
   // while the panel refreshes on its own. The framebuffer must stay untouched
   // until waitRefreshComplete(), and the caller must rebuild the differential

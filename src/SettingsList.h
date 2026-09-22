@@ -331,6 +331,13 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
         SettingInfo::Enum(StrId::STR_READER_MENU_STYLE, &CrossPointSettings::readerMenuStyle,
                           {StrId::STR_MENU_STYLE_LIST, StrId::STR_MENU_STYLE_TOOLBAR}, "readerMenuStyle",
                           StrId::STR_CAT_READER),
+        SettingInfo::Enum(StrId::STR_PAGE_TURN_ANIM, &CrossPointSettings::pageTurnAnimMode,
+                          {StrId::STR_STATE_OFF, StrId::STR_ANIM_SCROLL, StrId::STR_ANIM_BLINDS}, "pageTurnAnimMode",
+                          StrId::STR_CAT_READER),
+        SettingInfo::Enum(StrId::STR_PAGE_TURN_ANIM_SPEED, &CrossPointSettings::pageTurnAnimSpeed,
+                          {StrId::STR_SPEED_VERY_SLOW, StrId::STR_SPEED_SLOW, StrId::STR_SPEED_NORMAL,
+                           StrId::STR_SPEED_FAST, StrId::STR_SPEED_VERY_FAST},
+                          "pageTurnAnimSpeed", StrId::STR_CAT_READER),
         // --- Controls ---
         SettingInfo::Enum(StrId::STR_SIDE_BTN_LAYOUT, &CrossPointSettings::sideButtonLayout,
                           {StrId::STR_PREV_NEXT, StrId::STR_NEXT_PREV, StrId::STR_DISABLED}, "sideButtonLayout",

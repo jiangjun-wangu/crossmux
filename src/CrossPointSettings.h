@@ -378,6 +378,24 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // Focus Reading - emphasizes the first part of words with bold
   uint8_t focusReadingEnabled = 0;
   uint8_t readerMenuStyle = READER_MENU_LIST;
+
+  // 翻页动画
+  enum PAGE_TURN_ANIM {
+    PAGE_TURN_OFF = 0,
+    PAGE_TURN_SCROLL = 1,
+    PAGE_TURN_BLINDS = 2,
+    PAGE_TURN_ANIM_COUNT
+  };
+  enum PAGE_TURN_ANIM_SPEED {
+    ANIM_SPEED_VERY_SLOW = 0,
+    ANIM_SPEED_SLOW = 1,
+    ANIM_SPEED_NORMAL = 2,
+    ANIM_SPEED_FAST = 3,
+    ANIM_SPEED_VERY_FAST = 4,
+    ANIM_SPEED_COUNT
+  };
+  uint8_t pageTurnAnimMode = PAGE_TURN_OFF;
+  uint8_t pageTurnAnimSpeed = ANIM_SPEED_NORMAL;
   // SD card font family name (empty = use built-in fontFamily)
   char sdFontFamilyName[32] = "";
   // Prefer the internal Flash cache for the selected SD reader font.

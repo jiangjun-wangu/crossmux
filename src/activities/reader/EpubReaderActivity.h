@@ -42,6 +42,7 @@ class EpubReaderActivity final : public ReaderActivity {
   uint8_t pageLoadRetryCount = 0;
   static constexpr uint8_t MAX_PAGE_LOAD_RETRIES = 3;
   bool skipNextButtonCheck = false;
+  bool pendingPageTurnAnim = false;  // 本次渲染是一次页内翻页，可尝试动画
   bool automaticPageTurnActive = false;
   bool showBookmarkMessage = false;
   bool showDictionaryMessage = false;

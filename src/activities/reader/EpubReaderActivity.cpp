@@ -42,6 +42,7 @@
 #include "ReaderToolbarUi.h"
 #include "ReaderUtils.h"
 #include "ReadingStatsStore.h"
+#include "util/PageTurnAnimator.h"
 #include "RecentBooksStore.h"
 #include "SdCardFontSystem.h"
 #include "activities/settings/TextSettingsActivity.h"
@@ -1362,6 +1363,7 @@ bool EpubReaderActivity::pageTurn(bool isForwardTurn) {
   if (isForwardTurn) {
     if (section->currentPage < section->pageCount - 1 || section->isBuilding()) {
       section->currentPage++;
+      pendingPageTurnAnim = true;
       lastPageTurnTime = millis();
       return true;
     } else if (currentSpineIndex + 1 < epub->getSpineItemsCount()) {
@@ -1379,6 +1381,7 @@ bool EpubReaderActivity::pageTurn(bool isForwardTurn) {
   } else {
     if (section->currentPage > 0) {
       section->currentPage--;
+      pendingPageTurnAnim = true;
       lastPageTurnTime = millis();
       return true;
     } else if (currentSpineIndex > 0) {
@@ -1947,7 +1950,14 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
   const bool cleanImageBasePending = manualRefreshPending || pagesUntilFullRefresh <= 1;
   // Night mode renders crisp B/W; the SDK disables every grayscale display path.
   const bool grayscaleEnabled = !renderer.isInverted();
-  const bool needsTextGrayscale = grayscaleEnabled && SETTINGS.textAntiAliasing;
+  // 翻页动画资格：本次是页内翻页 + 动画开启 + 无图像页。
+  // 动画时禁用 combinedGrayscaleBase / async overlap 优化，让 BW 页面走
+  // 条带动画路径，灰度叠加紧随其后。关闭动画时行为完全不变。
+  const bool pageTurnAnimEligible =
+      pendingPageTurnAnim && SETTINGS.pageTurnAnimMode != CrossPointSettings::PAGE_TURN_OFF && !pageHasImages;
+
+  const bool needsTextGrayscale =
+      grayscaleEnabled && SETTINGS.textAntiAliasing && !pageTurnAnimEligible;
 #if FREEINK_DEVICE_EEGO_A4
   // A4 single-refresh design: displayGrayBuffer() replaces the B/W base on the
   // panel, so whatever the gray pass draws IS the final frame. With text AA
@@ -1958,19 +1968,22 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
   // to the plain B/W frame, which keeps text and image together.
   const bool needsAnyGrayscale = grayscaleEnabled && SETTINGS.textAntiAliasing;
 #else
-  const bool needsAnyGrayscale = grayscaleEnabled && (SETTINGS.textAntiAliasing || pageHasImages);
+  const bool needsAnyGrayscale =
+      grayscaleEnabled && (SETTINGS.textAntiAliasing || pageHasImages) && !pageTurnAnimEligible;
 #endif
   const bool tiledGrayscale = needsAnyGrayscale && renderer.supportsStripGrayscale();
   // Paper Mono only (no other panel combines): defer the B/W base activation so
   // the gray planes join it in a single waveform. Displaying the base
   // separately makes the gray pass re-drive the whole text body — a visible
   // flash on every AA page.
-  const bool combinedGrayscaleBase = tiledGrayscale && !pageHasImages && renderer.combinesGrayscaleBase();
+  const bool combinedGrayscaleBase =
+      tiledGrayscale && !pageHasImages && renderer.combinesGrayscaleBase() && !pageTurnAnimEligible;
 #if FREEINK_DEVICE_EEGO_A4
   const bool overlapRefresh =
       tiledGrayscale && renderer.supportsAsyncRefresh() && !pageHasImages && !needsTextGrayscale;
 #else
-  const bool overlapRefresh = tiledGrayscale && renderer.supportsAsyncRefresh() && !pageHasImages;
+  const bool overlapRefresh =
+      tiledGrayscale && renderer.supportsAsyncRefresh() && !pageHasImages && !pageTurnAnimEligible;
 #endif
   const auto drawGuideLines = [&] {
     if (!SETTINGS.readingGuideLineEnabled) return;
@@ -2040,7 +2053,27 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
       ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh, overlapRefresh);
     }
 #else
-    ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh, overlapRefresh);
+    const bool animEligible = pageTurnAnimEligible && pagesUntilFullRefresh > 1;
+    pendingPageTurnAnim = false;
+    PageTurnAnimator::Result animResult = PageTurnAnimator::NOT_RUN;
+    if (animEligible) {
+      const auto cancelCheck = [this]() { return mappedInput.wasAnyPressed(); };
+      const auto mode = (SETTINGS.pageTurnAnimMode == CrossPointSettings::PAGE_TURN_BLINDS)
+                            ? PageTurnAnimator::BLINDS
+                            : PageTurnAnimator::SCROLL;
+      const auto speed = static_cast<PageTurnAnimator::Speed>(SETTINGS.pageTurnAnimSpeed);
+      animResult = pageTurnAnimator.animate(renderer, mode, speed, cancelCheck);
+    }
+    if (animResult == PageTurnAnimator::COMPLETED) {
+      if (pagesUntilFullRefresh > 1) pagesUntilFullRefresh--;
+      pageTurnAnimator.noteFullRefresh();
+    } else if (animResult == PageTurnAnimator::CANCELLED) {
+      renderer.displayBuffer(HalDisplay::HALF_REFRESH, DisplayRefreshContext::ContinuousReading);
+      pagesUntilFullRefresh = SETTINGS.getRefreshFrequency();
+      pageTurnAnimator.noteFullRefresh();
+    } else {
+      ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh, overlapRefresh);
+    }
 #endif
   }
   const auto tDisplay = millis();

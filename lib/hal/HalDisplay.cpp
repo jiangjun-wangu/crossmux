@@ -72,6 +72,10 @@ EInkDisplay::RefreshContext convertRefreshContext(DisplayRefreshContext context)
 }
 }  // namespace
 
+void HalDisplay::displayPartialWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool turnOffScreen) {
+  einkDisplay.displayWindow(x, y, w, h, turnOffScreen);
+}
+
 void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen, DisplayRefreshContext context) {
   if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
     einkDisplay.requestResync(1);

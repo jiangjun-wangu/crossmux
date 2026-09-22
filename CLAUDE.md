@@ -169,3 +169,70 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 - 不喜欢一次抛太多信息
 - 所有操作都在终端，命令必须直接可跑
 - 长 heredoc 容易截断，用 cat >> 分小段追加
+
+## 翻页动画（2026-09-22 新增）
+
+安全版翻页动画，三种阅读格式（EPUB / TXT / XTC）均已支持。
+
+### 配置项
+
+| 设置 | 默认值 | 说明 |
+|---|---|---|
+| pageTurnAnimMode | PAGE_TURN_OFF | 0=关闭 / 1=卷轴 / 2=百叶窗 |
+| pageTurnAnimSpeed | ANIM_SPEED_NORMAL | 5 档 |
+
+速度档位与条带数（条带越多越平滑、越慢）：
+
+| 档位 | 条带数 |
+|---|---|
+| VERY_FAST | 1（整屏一次刷） |
+| FAST | 2 |
+| NORMAL | 4 |
+| SLOW | 6 |
+| VERY_SLOW | 8 |
+
+设置入口：设置 -> 阅读 -> 翻页动画 / 动画速度
+
+### 关键文件
+
+| 用途 | 路径 |
+|---|---|
+| 动画引擎 | src/util/PageTurnAnimator.{h,cpp} |
+| 窗口刷新 HalDisplay | lib/hal/HalDisplay.{h,cpp} |
+| 窗口刷新 GfxRenderer | lib/GfxRenderer/GfxRenderer.{h,cpp} |
+| 设置字段 | src/CrossPointSettings.{h,cpp} |
+| 设置菜单项 | src/SettingsList.h |
+| EPUB 集成 | src/activities/reader/EpubReaderActivity.cpp |
+| TXT 集成 | src/activities/reader/TxtReaderActivity.cpp |
+| XTC 集成 | src/activities/reader/XtcReaderActivity.cpp |
+
+### 工作原理
+
+底层复用 SSD1677 驱动已存在的 displayWindow 窗口局部刷新，
+无需新增控制器命令、LUT、波形。每次翻页把新页按条带逐块刷到面板：
+
+1. 新页已渲染到 frameBuffer
+2. frameBufferActive（单缓冲模式下由控制器 RED RAM 持有）保留上一页
+3. 逐条带调 renderer.displayWindow(0, y, W, h) 做 FAST 局刷
+4. 面板逐步从旧页过渡到新页
+
+### 安全约束（写入代码，不可绕过）
+
+- MAX_PARTIAL_BEFORE_FULL = 8   连续局刷上限（条带数上限）
+- MAX_ANIMATION_TOTAL_MS  = 15000 动画总时长上限
+- CANCEL_GRACE_MS         = 300  动画开始后不响应取消的宽限期
+
+8 像素 X 对齐由 GfxRenderer::screenRectToAlignedMemRect 自动处理；
+越界/未对齐由 Ssd1677Driver::displayWindow 拒绝。
+连续 8 条带后由刷新计数触发一次全刷清残影。
+
+### 中断处理
+
+翻页动画进行中按任意键，立即停止剩余条带并做一次 HALF 全刷清残影。
+前 300ms 宽限期不响应，避免翻页键的 press-edge 误取消。
+
+### 模拟器限制
+
+模拟器 SDK 的 HalDisplay::displayWindow 忽略坐标、不做 present，
+因此模拟器里看不到逐条带效果，只能看日志中的 [ANIM] start/done。
+真机才有真实墨水屏刷新时间。

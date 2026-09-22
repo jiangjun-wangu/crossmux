@@ -18,6 +18,7 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "util/AchievementPopupUtils.h"
+#include "util/PageTurnAnimator.h"
 
 bool XtcReaderActivity::loadBook() {
   auto loadedXtc = makeUniqueNoThrow<Xtc>(bookPath, "/.crosspoint");
@@ -300,7 +301,28 @@ void XtcReaderActivity::renderPage() {
     renderStatusBarOverlay(renderer, StatusBarOverlayPosition::Bottom);
   }
 
-  ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
+  const bool animEligible =
+      pendingPageTurnAnim && SETTINGS.pageTurnAnimMode != CrossPointSettings::PAGE_TURN_OFF;
+  pendingPageTurnAnim = false;
+  PageTurnAnimator::Result animResult = PageTurnAnimator::NOT_RUN;
+  if (animEligible) {
+    const auto cancelCheck = [this]() { return mappedInput.wasAnyPressed(); };
+    const auto animMode = (SETTINGS.pageTurnAnimMode == CrossPointSettings::PAGE_TURN_BLINDS)
+                              ? PageTurnAnimator::BLINDS
+                              : PageTurnAnimator::SCROLL;
+    const auto animSpeed = static_cast<PageTurnAnimator::Speed>(SETTINGS.pageTurnAnimSpeed);
+    animResult = pageTurnAnimator.animate(renderer, animMode, animSpeed, cancelCheck);
+  }
+  if (animResult == PageTurnAnimator::COMPLETED) {
+    if (pagesUntilFullRefresh > 1) pagesUntilFullRefresh--;
+    pageTurnAnimator.noteFullRefresh();
+  } else if (animResult == PageTurnAnimator::CANCELLED) {
+    renderer.displayBuffer(HalDisplay::HALF_REFRESH, DisplayRefreshContext::ContinuousReading);
+    pagesUntilFullRefresh = SETTINGS.getRefreshFrequency();
+    pageTurnAnimator.noteFullRefresh();
+  } else {
+    ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
+  }
 
   LOG_DBG("XTR", "Rendered page %lu/%lu (%u-bit)", currentPage + 1, xtc->getPageCount(), bitDepth);
 }
@@ -311,11 +333,13 @@ bool XtcReaderActivity::pageTurn(bool isForward) {
   if (isForward) {
     if (currentPage < xtc->getPageCount()) {
       currentPage++;
+      pendingPageTurnAnim = true;
       return true;
     }
   } else {
     if (currentPage > 0) {
       currentPage--;
+      pendingPageTurnAnim = true;
       return true;
     }
   }

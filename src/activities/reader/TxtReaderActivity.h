@@ -43,6 +43,7 @@ class TxtReaderActivity final : public ReaderActivity {
   int viewportWidth = 0;
   bool initialized = false;
   bool indexComplete = false;
+  bool pendingPageTurnAnim = false;  // 本次渲染是一次翻页，可尝试动画
   bool indexCacheDirty = false;
   size_t currentPageEndOffset = 0;
 #ifdef ENABLE_CHINESE_VERSION

@@ -274,6 +274,8 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
 
   // Language -- managed by LanguageSelectActivity, not in SettingsList.
   // Stored as ISO code string ("EN", "DE", ...) for stability across enum reorders.
+  doc["pageTurnAnimMode"] = pageTurnAnimMode;
+  doc["pageTurnAnimSpeed"] = pageTurnAnimSpeed;
   doc["language"] = (language < getLanguageCount()) ? LANGUAGE_CODES[language] : "EN";
   doc["contentProfile"] = static_cast<uint8_t>(contentProfile);
   doc["onboardingVersion"] = onboardingVersion;
@@ -455,6 +457,11 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   copyToField(dictionaryName, doc["dictionaryName"] | "", sizeof(dictionaryName));
   otaNightlyEnabled =
       clamp(static_cast<uint8_t>(doc["otaNightlyEnabled"] | 0), static_cast<uint8_t>(2), static_cast<uint8_t>(0));
+
+  pageTurnAnimMode = clamp(static_cast<uint8_t>(doc["pageTurnAnimMode"] | static_cast<uint8_t>(PAGE_TURN_SCROLL)),
+                           PAGE_TURN_ANIM_COUNT, static_cast<uint8_t>(PAGE_TURN_SCROLL));
+  pageTurnAnimSpeed = clamp(static_cast<uint8_t>(doc["pageTurnAnimSpeed"] | static_cast<uint8_t>(ANIM_SPEED_NORMAL)),
+                            ANIM_SPEED_COUNT, static_cast<uint8_t>(ANIM_SPEED_NORMAL));
 
   // Language -- stored as code string for stability across enum reorders.
   if (doc["language"].is<const char*>()) {

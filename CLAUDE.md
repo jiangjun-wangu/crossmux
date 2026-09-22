@@ -78,31 +78,11 @@ git push origin main
 - 已配 credential.helper store，只需第一次输 token
 - token 需 Contents (RW) + Workflows (RW) 权限
 
-## 当前状态（2026-09-22）
-
-### 硬件
+## 硬件
 
 ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4 阶灰度 / 无触摸
 
-### 编译
-
-- Flash：6,494,867 / 6,553,600（99.1%）
-- 剩余：58,733 字节
-- RAM：30.3%
-- IRAM：100%（不做 IRAM 优化）
-- Flash 剩余不足 60 KB，改动前评估体积
-
-### 字体
-
-| 场景 | 字体 | 位置 |
-|---|---|---|
-| 内置 UI | MiSans GB2312 6763 字，8/10/12pt | misans_cjk_*.h |
-| SD 阅读 | MiSans 全量 CJK，18/20/24pt | 真机 SD /fonts/MiSans/ |
-| 汉字钟 | mi72.h 72pt 12 汉字 | mi72.h |
-| 状态栏数字 | misans_latin_8_regular | misans_latin_8_regular.h |
-| 小字号 | misans_latin_8_regular | misans_latin_8_regular.h |
-
-### 关键设置
+## 关键设置
 
 - sdFontFamilyName = "MiSans"
 - sdFontFlashPreload = 0（超限时静默跳过并弹专用文案）
@@ -168,7 +148,91 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 - 每轮 1-3 个问题
 - 不喜欢一次抛太多信息
 - 所有操作都在终端，命令必须直接可跑
-- 长 heredoc 容易截断，用 cat >> 分小段追加
+- **追加文档一律用 Python 脚本**（写 .py 文件再运行），不用 heredoc / cat >>
+
+## 工作流规范（2026-09-23 固化）
+
+### 提交规范（固定五步）
+
+1. 里程碑备份 → `~/crossmux_backups/YYYYMMDD_HHMMSS_<说明>/`
+2. `git add -A`
+3. `git commit -m "..."`（分点说明改动）
+4. `git push origin main`
+5. `git log --oneline -3` + `git status --short` 确认
+
+### 文档追加规范
+
+**一律用 Python 脚本**（写 `.py` 文件再运行），不用 heredoc / `cat >>`。
+原因：长 heredoc 在 WSL 会话中会被截断，导致内容丢失。
+
+### 烧录规范
+
+- **默认只烧 `firmware.bin` → `0x10000`**
+- 分区表（`partitions.csv`）和 bootloader 未改，不需要重烧
+- ⚠️ 项目自带烧录工具会因 `crossmux-sticky-v1` manifest 标签拒绝 app-only 烧录（设备 NVS 没这个标签）；改用 **flash_download_tool** 手动烧
+- flash_download_tool 参数：ESP32-S3 / Develop / DIO / 80MHz / 16MB / 起始 `0x10000`
+- 如果连 `partitions.bin` 一起烧会清空 NVS（WiFi、设置、进度）
+
+### 字体状态（2026-09-23）
+
+- 全系统统一**官方小米 MiSans**（MD5 验证，非改名冒充）
+- 源：`lib/EpdFont/builtinFonts/source/MiSans/MiSans-{Regular,Medium,Bold}.ttf`
+- 内置：`misans_latin_*` / `misans_cjk_*` / `mi72.h`
+- SD：`/fonts/MiSans/MiSans_<size>.cpfont`
+- ID 宏：`SANS_*` / `SERIF_*`（原 NOTOSANS/NOTOSERIF，值未变）
+- 已删除：NotoSans / NotoSerif / NotoSansSC / NotoSansHebrew / NotoSansArabic / Ubuntu / OpenDyslexic
+
+### i18n 状态（2026-09-23）
+
+- **只剩中英双语**（`chinese.yaml` + `english.yaml`）
+- 已删 32 个未用语言 YAML
+- `Language` 枚举仅 `EN` / `ZH_CN`
+- 脚本层硬编码：`gen_i18n.py` 设 `CROSSPOINT_KEEP_LANGS=EN,ZH_CN`
+
+### 当前编译状态
+
+| 项 | 值 |
+|---|---|
+| Flash | 6,427,659 / 6,553,600（98.1%，剩 126KB）|
+| RAM | 30.3%（99,380 / 327,680）|
+| IRAM | 100%（已满，不做 IRAM 优化）|
+| 最新 commit | baa371b2 |
+
+⚠️ Flash 剩余不足 130 KB，改动前评估体积。
+
+### 编译记录规范（2026-09-23 固化）
+
+**每次编译完成后，必须记录：**
+
+| 字段 | 示例 |
+|---|---|
+| 日期时间 | 2026-09-23 00:55 |
+| 编译类型 | 真机 / 模拟器 |
+| 耗时 | 1m33s |
+| Flash | 6,427,659 / 6,553,600（98.1%，剩 126 KB）|
+| RAM | 99,380 / 327,680（30.3%）|
+| IRAM | 16,384 / 16,384（100%）|
+| 相对上次变化 | Flash -736 B（-0.01%）|
+| 触发 commit | baa371b2 |
+
+变化率 = (本次 - 上次) / 上次 × 100%。
+
+**记录位置**：CLAUDE.md「编译历史」段（滚动保留最近 10 次）。
+
+### 编译历史
+
+| 时间 | 类型 | 耗时 | Flash | 占用率 | RAM | 变化 | commit |
+|---|---|---|---|---|---|---|---|
+| 2026-09-23 00:55 | 真机 | 1m33s | 6,427,659 | 98.1% | 30.3% | -736 B | baa371b2 |
+| 2026-09-23 00:21 | 真机 | 1m21s | 6,428,395 | 98.1% | 30.3% | -864 B | b0e9a8d2 |
+| 2026-09-22 22:42 | 真机 | 1m45s | 6,429,499 | 98.1% | 30.3% | — | 4773e9c1 |
+
+### 翻页动画安全约束（不可绕过）
+
+- 单次动画连续局刷 ≤ 10（供应商一致建议）
+- 单次动画总时长 ≤ 15s
+- 连续 10 次局刷后强制全刷
+- 不使用自定义 LUT / 波形，不写 eFuse
 
 ## 翻页动画（2026-09-22 新增）
 

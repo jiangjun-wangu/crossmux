@@ -22,6 +22,7 @@
 6. **每轮只问 1-3 个必要问题**
 7. **先探测再动手**：改代码前先 grep / cat 确认现状
 8. **长 heredoc 会截断**：多行内容用 Python 分段写入，不用 `cat << EOF`
+9. **每次新功能结束必须更新 CLAUDE.md 和 README.md**
 
 
 ## 核心命令
@@ -140,6 +141,7 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 
 1. 封面截断缓存：BookCoverLoader::isValidBmp 拒绝头声明大小 > 实际文件大小的 BMP，避免 "Failed to read crop-fill row 0"
 2. preload 超限提示：TextSettingsActivity::exitAfterFinalFont 加 cpfont 大小检查，超缓存容量时静默跳过，弹 STR_FONT_PRELOAD_TOO_LARGE（文案「字体超过 Flash 剩余空间，已加载 SD 卡字体文件」）
+3. SD 卡缺失不再变砖：FullScreenMessageActivity 加 loop()，任意按键触发 ESP.restart()；文案改为中英双语 STR_SD_CARD_MISSING
 
 ## 设计取舍（非 bug）
 

@@ -143,6 +143,27 @@ platformio run -e waveshare_epaper_397 -t upload
 - 符号名 COMPLETE_CHINESE_NOTO_SANS_FAMILY 改为 COMPLETE_CHINESE_MISANS_FAMILY
 - 默认布局：最近 / 书库走 List，Apps 走 Icons
 
+### 12. SD 卡缺失不再变砖
+
+- 原行为：SD 卡初始化失败 → 全屏错误页 → 无按键响应，无法回主页
+- 新行为：错误页显示中英双语提示，**任意按键触发 ESP.restart()**
+  - 中文：「SD 卡未插入或损坏，插好后按任意键重启」
+  - 英文：「SD card missing or damaged. Insert card and press any key to reboot.」
+- 实现：FullScreenMessageActivity::loop() 检测按键并重启；main.cpp 用 StrId::STR_SD_CARD_MISSING
+
+### 13. preload 超限时静默跳过
+
+- SD 卡字体 cpfont 大于 Flash 缓存容量时，不再尝试 preload，直接走 SD 直读
+- 弹专用文案：「字体超过 Flash 剩余空间，已加载 SD 卡字体文件」
+- 实现：TextSettingsActivity::exitAfterFinalFont 先检查 cpfont 大小 vs SdCardFontCache::capacity()
+- 新增 i18n 字符串 STR_FONT_PRELOAD_TOO_LARGE
+
+### 14. 字体显示名统一为 MiSans
+
+- STR_NOTO_SANS / STR_NOTO_SERIF 的值从「Noto Sans」/「Noto Serif」改为「MiSans」
+- STR_AUTO_FONT_FAMILY_MISSING 从「字体清单中没有 NotoSansSC」改为「字体清单中没有 MiSans」
+- 英文 yaml 同步更新
+
 ## Flash / RAM 状态
 
 | 项 | 值 |

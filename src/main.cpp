@@ -574,6 +574,13 @@ void setup() {
   // We need 6 open files concurrently when parsing a new chapter
   if (!Storage.begin()) {
     LOG_ERR("MAIN", "SD card initialization failed");
+    // SD 卡失败时 SETTINGS 还没从磁盘加载，orientation 是默认值 PORTRAIT。
+    // 微雪 3.97 原生是 800x480 横屏，必须先强制设为 LandscapeCounterClockwise，
+    // 否则错误页会渲染成竖排。
+    renderer.setOrientation(GfxRenderer::Orientation::LandscapeCounterClockwise);
+    // SD 卡失败时 SETTINGS 未加载，语言是默认值。本移植面向中文用户，
+    // 强制设为中文，保证错误页可读。
+    I18N.setLanguage(Language::ZH_CN);
     const bool fontsReady = setupDisplayAndFonts(isSilentReboot);
     activityManager.goToFullScreenMessage(I18N.get(StrId::STR_SD_CARD_MISSING), EpdFontFamily::BOLD);
     activityManager.requestUpdateAndWait();

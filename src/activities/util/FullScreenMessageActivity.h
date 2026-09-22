@@ -22,4 +22,6 @@ class FullScreenMessageActivity final : public Activity {
         refreshMode(refreshMode) {}
   void onEnter() override;
   void loop() override;
+  // 错误页必须保持唤醒，否则用户还没插卡设备就自动休眠了
+  bool preventAutoSleep() override { return true; }
 };

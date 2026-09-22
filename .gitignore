@@ -35,3 +35,7 @@ weread_apikey*.bin
 /dependencies.lock
 /sdkconfig.*
 flake.*
+
+# 临时备份文件
+*.bak
+*.bak_*

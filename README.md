@@ -66,10 +66,11 @@ platformio run -e waveshare_epaper_397 -t upload
 
 ### 2. SD 卡阅读字体替换为 MiSans（全量 CJK）
 
-- fs_/.fonts/MiSans/ 存 6 个 .cpfont 文件（8~18pt），**全量 CJK**（约 20992 字）
+- SD 卡 `/fonts/MiSans/` 或 `/.fonts/MiSans/` 存 cpfont 文件，**全量 CJK**（约 20992 字）
+- 支持 **8–36pt 共 15 档偶数点大小**（详见 [docs/misans-sd-fonts.md](./docs/misans-sd-fonts.md)）
 - 生成命令：
 
-  python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18 --style regular lib/EpdFont/builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf --output-dir fs_/.fonts/MiSans/
+  python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18,20,22,24,26,28,30,32,34,36 --style regular lib/EpdFont/builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf --output-dir /tmp/misans/
 
 ### 3. 阅读 / UI 字体分工
 
@@ -181,10 +182,11 @@ preload 机制会把选中的 SD 字体拷贝到未激活的 OTA 槽，加速阅
 本移植关闭该机制，原因：
 
 - 模拟器环境下 HalOtaSlot::inactive() 返回空，preload 直接拒绝
-- 真机 18pt cpfont（6.57 MB）超 6.55 MB 上限
-- 真机 12/14/16pt 理论可行，但会占用 OTA 槽，导致后续 OTA 升级失效
+- Flash 缓存上限 **6.55 MB**，20pt 及以上 cpfont 超限（如 24pt = 10.7 MB）
+- 8–18pt 理论可行，但会占用 OTA 槽，导致后续 OTA 升级失效
 - 本机 Flash 已用 99.1%，OTA 升级本就不可行，preload 的收益（e-ink 翻页
   瓶颈在屏幕刷新）也有限
+- 超限时弹提示「字体超过 Flash 剩余空间，已加载 SD 卡字体文件」，静默走 SD 直读
 
 当前策略：sdFontFlashPreload = 0，阅读走 SD 直读。
 
@@ -211,6 +213,7 @@ preload 机制会把选中的 SD 字体拷贝到未激活的 OTA 槽，加速阅
 | 主页缩略图 | src/activities/home/InxRecentActivity.cpp |
 | 键盘布局表 | src/activities/util/KeyboardLayoutSet.h |
 | SD 阅读字体 | fs_/.fonts/MiSans/（需自行生成，不随仓库分发） |
+| SD 字体文档 | docs/misans-sd-fonts.md（MiSans 8-36pt 完整说明） |
 | 模拟器书籍 | fs_/books/ |
 
 ## 相关文档

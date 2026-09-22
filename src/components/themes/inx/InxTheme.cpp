@@ -99,7 +99,7 @@ void InxTheme::drawHeader(const GfxRenderer& renderer, const Rect rect, const ch
       const int subtitleHeight = renderer.getLineHeight(SMALL_FONT_ID);
       const Rect subtitleRect{
           titleRight + kIconGap,
-          titleTop + std::max(0, (renderer.getLineHeight(NOTOSERIF_12_FONT_ID) - subtitleHeight) / 2), subtitleWidth,
+          titleTop + std::max(0, (renderer.getLineHeight(SERIF_12_FONT_ID) - subtitleHeight) / 2), subtitleWidth,
           subtitleHeight};
       const GfxRenderer::ClipScope clip(renderer, subtitleRect.x, subtitleRect.y, subtitleRect.width,
                                         subtitleRect.height);
@@ -109,8 +109,8 @@ void InxTheme::drawHeader(const GfxRenderer& renderer, const Rect rect, const ch
 
   if (title && *title && titleRight > rect.x + kRowPadding) {
     const GfxRenderer::ClipScope clip(renderer, rect.x + kRowPadding, titleTop, titleRight - rect.x - kRowPadding,
-                                      renderer.getLineHeight(NOTOSERIF_12_FONT_ID));
-    renderer.drawText(NOTOSERIF_12_FONT_ID, rect.x + kRowPadding, titleTop, title, true, EpdFontFamily::BOLD);
+                                      renderer.getLineHeight(SERIF_12_FONT_ID));
+    renderer.drawText(SERIF_12_FONT_ID, rect.x + kRowPadding, titleTop, title, true, EpdFontFamily::BOLD);
   }
   renderer.drawLine(rect.x, rect.y + rect.height - 1, rect.x + rect.width - 1, rect.y + rect.height - 1, true);
 }

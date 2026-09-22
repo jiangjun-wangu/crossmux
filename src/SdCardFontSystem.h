@@ -46,9 +46,9 @@ class SdCardFontSystem {
   void markRegistryDirty() { registryDirty_.store(true, std::memory_order_release); }
 
   /// Chinese builds replace the duplicate built-in reader face with the
-  /// complete SD-card Noto Sans family when it is installed.
+  /// complete SD-card MiSans family when it is installed.
   /// Returns true when the saved selection changed.
-  bool adoptCompleteChineseNotoSans();
+  bool adoptCompleteChineseMiSans();
 
   /// If the registry is dirty, re-scan the SD card now and clear the flag.
   /// Used by the web UI so uploaded/deleted fonts appear in the list
@@ -56,7 +56,7 @@ class SdCardFontSystem {
   void refreshIfDirty() {
     if (registryDirty_.exchange(false, std::memory_order_acquire)) {
       registry_.discover();
-      adoptCompleteChineseNotoSans();
+      adoptCompleteChineseMiSans();
     }
   }
 

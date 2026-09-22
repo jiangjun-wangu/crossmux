@@ -69,7 +69,7 @@ void LanguageSelectActivity::activateIndex(const int index) {
       break;
     case Mode::Initial:
       SETTINGS.clockUtcOffsetQ = simplifiedChinese ? 80 : 48;
-      SETTINGS.fontFamily = CrossPointSettings::NOTOSANS;
+      SETTINGS.fontFamily = CrossPointSettings::FONT_SANS;
       SETTINGS.fontPointSize = 12;
       SETTINGS.onboardingVersion = CrossPointSettings::CURRENT_ONBOARDING_VERSION;
       break;

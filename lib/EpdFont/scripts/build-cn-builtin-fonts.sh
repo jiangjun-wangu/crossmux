@@ -11,7 +11,7 @@
 # Every tier also ships ASCII + Latin-1 + CJK punctuation + full-width forms.
 #
 # Pipeline:
-#   1. pyftsubset trims NotoSansSC-Regular.otf to the requested character set
+#   1. pyftsubset trims MiSans-Regular.ttf to the requested character set
 #   2. fontconvert.py emits a 2-bit raw bitmap header for each point size
 #
 # Raw bitmaps (no --compress): with 6 simultaneously-loaded CJK fonts each
@@ -31,7 +31,7 @@ cd "$(dirname "$0")"
 # python3 (override with PYTHON=/path/to/venv/bin/python if a venv is needed).
 PYTHON="${PYTHON:-python3}"
 
-SOURCE_OTF="../builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf"
+SOURCE_OTF="../builtinFonts/source/MiSans/MiSans-Regular.ttf"
 # Frequency-ranked subset produced by build_cn_charset.py. Defaults to the
 # top 3500 most common Chinese characters by wordfreq Zipf score, plus every
 # CJK ideograph used in the Chinese i18n strings (force-included so UI text
@@ -43,13 +43,13 @@ CHARSET_FILE="cn_common_chars.txt"
 # it renders adds its own cn_<feature>_chars.txt here.
 # cn_almanac_chars.txt: ganzhi + lunar-row chars for ChineseCalendarFace.
 REQUIRE_FROM=(../../I18n/translations/chinese.yaml cn_almanac_chars.txt)
-TMP_DIR="instanced_fonts/NotoSansSC"
-SUBSET_OTF="$TMP_DIR/NotoSansSC-Regular.cncommon.otf"
+TMP_DIR="instanced_fonts/MiSans"
+SUBSET_OTF="$TMP_DIR/MiSans-Regular.cncommon.ttf"
 # Tiny OTF holding only the CJK chars that appear in i18n/feature sources (747
 # chars). Used to build the 14pt/16pt/18pt bitmap headers — those reader sizes
 # rely on an SD-card font for broad Chinese EPUB coverage, but UI strings (game
 # win banners etc.) still need to render at every size.
-I18N_OTF="$TMP_DIR/NotoSansSC-Regular.i18nonly.otf"
+I18N_OTF="$TMP_DIR/MiSans-Regular.i18nonly.ttf"
 I18N_CHARSET_FILE="cn_i18n_chars.txt"
 
 # Font sizes split by character coverage:
@@ -60,7 +60,7 @@ CN_FONT_SIZES_I18N=(14 16 18)
 
 if [ ! -f "$SOURCE_OTF" ]; then
   echo "Error: $SOURCE_OTF not found." >&2
-  echo "Drop NotoSansSC-Regular.otf into lib/EpdFont/builtinFonts/source/NotoSansSC/." >&2
+  echo "Drop MiSans-Regular.ttf into lib/EpdFont/builtinFonts/source/MiSans/." >&2
   exit 1
 fi
 

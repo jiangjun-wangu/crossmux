@@ -151,7 +151,7 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     formatYearCjk(day.gregYear, yearCjk, sizeof(yearCjk));
     formatGanzhiYearLabel(day, ganzhiBuf, sizeof(ganzhiBuf));
     const char* row[] = {yearCjk, kDot, ganzhiBuf};
-    drawCenteredRow(renderer, NOTOSANS_14_FONT_ID, viewport, viewport.y + 32, row, 3, /*gap=*/8);
+    drawCenteredRow(renderer, SANS_14_FONT_ID, viewport, viewport.y + 32, row, 3, /*gap=*/8);
   }
 
   // Month + weekday:  5月    星期一
@@ -160,7 +160,7 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     std::snprintf(monthBuf, sizeof(monthBuf), "%u%s", static_cast<unsigned>(day.gregMonth), tr(STR_CAL_MONTH_SUFFIX));
     const uint8_t wi = (day.weekdayIdx < 7) ? day.weekdayIdx : 0;
     const char* row[] = {monthBuf, I18n::getInstance().get(kWeekdayStrIds[wi])};
-    drawCenteredRow(renderer, NOTOSANS_14_FONT_ID, viewport, viewport.y + 80, row, 2, /*gap=*/40);
+    drawCenteredRow(renderer, SANS_14_FONT_ID, viewport, viewport.y + 80, row, 2, /*gap=*/40);
   }
 
   // Hero day digit — 用内置 72pt 字体渲染（原 SloppyDigits 手绘风格已替换）
@@ -168,12 +168,12 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     char buf[4];
     std::snprintf(buf, sizeof(buf), "%u", static_cast<unsigned>(day.gregDay));
     // ZEN_72_FONT_ID 定义在 main.cpp
-    constexpr int kZen72FontId = 0x434A4B48;
-    const int textW = renderer.getTextWidth(kZen72FontId, buf);
-    const int textH = renderer.getFontAscenderSize(kZen72FontId);
+    constexpr int kMi72FontId = 0x434A4B48;
+    const int textW = renderer.getTextWidth(kMi72FontId, buf);
+    const int textH = renderer.getFontAscenderSize(kMi72FontId);
     const int heroX = viewport.x + (vw - textW) / 2;
     const int heroY = viewport.y + static_cast<int>(vh * kHeroTopRatio);
-    renderer.drawText(kZen72FontId, heroX, heroY, buf, true);
+    renderer.drawText(kMi72FontId, heroX, heroY, buf, true);
   }
 
   // Bold divider — sits on the screen's vertical midline.
@@ -188,7 +188,7 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     formatLunarFull(day, lunar, sizeof(lunar));
     char buf[40];
     std::snprintf(buf, sizeof(buf), "%s   %s", tr(STR_CAL_LUNAR_PREFIX), lunar);
-    renderer.drawCenteredText(NOTOSANS_18_FONT_ID, dividerY + kLunarOffsetBelowDivider, buf);
+    renderer.drawCenteredText(SANS_18_FONT_ID, dividerY + kLunarOffsetBelowDivider, buf);
   }
 
   // Zodiac:  生肖 · 马
@@ -207,7 +207,7 @@ void drawAlmanacPage(GfxRenderer& renderer, const Rect& viewport, const AlmanacD
     std::snprintf(distanceBuf, sizeof(distanceBuf), tr(STR_CAL_DAYS_TO_NEXT_FMT), termNext,
                   static_cast<int>(day.daysToNextTerm));
     const char* row[] = {tr(STR_CAL_TERM_LABEL), kDot, termCur, kDot, distanceBuf};
-    drawCenteredRow(renderer, NOTOSANS_12_FONT_ID, viewport, viewport.y + static_cast<int>(vh * kTermRowYRatio), row, 5,
+    drawCenteredRow(renderer, SANS_12_FONT_ID, viewport, viewport.y + static_cast<int>(vh * kTermRowYRatio), row, 5,
                     /*gap=*/8);
   }
 

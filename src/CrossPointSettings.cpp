@@ -442,15 +442,15 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   sdFontFlashPreload =
       clamp(static_cast<uint8_t>(doc["sdFontFlashPreload"] | 0), static_cast<uint8_t>(2), static_cast<uint8_t>(0));
   if (storedFontFamily == LEGACY_OPENDYSLEXIC && sdFontFamilyName[0] == '\0') {
-    fontFamily = NOTOSERIF;
+    fontFamily = FONT_SERIF;
     strncpy(sdFontFamilyName, "OpenDyslexic", sizeof(sdFontFamilyName) - 1);
     sdFontFamilyName[sizeof(sdFontFamilyName) - 1] = '\0';
     needsResave = true;
   } else if (storedFontFamily >= BUILTIN_FONT_COUNT) {
     needsResave = true;
   }
-  if (sdFontFamilyName[0] == '\0' && fontFamily != NOTOSANS) {
-    fontFamily = NOTOSANS;
+  if (sdFontFamilyName[0] == '\0' && fontFamily != FONT_SANS) {
+    fontFamily = FONT_SANS;
     needsResave = true;
   }
   // Dictionary folder name — uses dynamic getter/setter in SettingsList, load manually
@@ -601,7 +601,7 @@ bool CrossPointSettings::loadFromBinaryFile() {
     if (legacyFontFamily < BUILTIN_FONT_COUNT) {
       fontFamily = legacyFontFamily;
     } else if (legacyFontFamily == LEGACY_OPENDYSLEXIC) {
-      fontFamily = NOTOSERIF;
+      fontFamily = FONT_SERIF;
       copyToField(sdFontFamilyName, "OpenDyslexic", sizeof(sdFontFamilyName));
     }
   }
@@ -692,7 +692,7 @@ float CrossPointSettings::getReaderLineCompression() const {
   }
 
   switch (fontFamily) {
-    case NOTOSERIF:
+    case FONT_SERIF:
     default:
       switch (lineSpacing) {
         case TIGHT:
@@ -705,7 +705,7 @@ float CrossPointSettings::getReaderLineCompression() const {
         case EXTRA_WIDE:
           return 1.2f;
       }
-    case NOTOSANS:
+    case FONT_SANS:
       switch (lineSpacing) {
         case TIGHT:
           return 0.90f;
@@ -764,7 +764,7 @@ int CrossPointSettings::getRefreshFrequency() const {
 void CrossPointSettings::clearSdFontFamily() {
   sdFontFamilyName[0] = '\0';
   sdFontFlashPreload = 0;
-  fontFamily = NOTOSANS;
+  fontFamily = FONT_SANS;
   fontPointSize =
       snapToNearestPointSize(BUILTIN_READER_POINT_SIZES, std::size(BUILTIN_READER_POINT_SIZES), fontPointSize);
   saveToFile();
@@ -784,16 +784,16 @@ int CrossPointSettings::getReaderFontId() const {
   // in the page render loop) so rendering is correct even before it has run.
   const uint8_t pt =
       snapToNearestPointSize(BUILTIN_READER_POINT_SIZES, std::size(BUILTIN_READER_POINT_SIZES), fontPointSize);
-  const bool sans = (fontFamily == NOTOSANS);
+  const bool sans = (fontFamily == FONT_SANS);
   switch (pt) {
     case 12:
-      return sans ? NOTOSANS_12_FONT_ID : NOTOSERIF_12_FONT_ID;
+      return sans ? SANS_12_FONT_ID : SERIF_12_FONT_ID;
     case 16:
-      return sans ? NOTOSANS_16_FONT_ID : NOTOSERIF_16_FONT_ID;
+      return sans ? SANS_16_FONT_ID : SERIF_16_FONT_ID;
     case 18:
-      return sans ? NOTOSANS_18_FONT_ID : NOTOSERIF_18_FONT_ID;
+      return sans ? SANS_18_FONT_ID : SERIF_18_FONT_ID;
     case 14:
     default:
-      return sans ? NOTOSANS_14_FONT_ID : NOTOSERIF_14_FONT_ID;
+      return sans ? SANS_14_FONT_ID : SERIF_14_FONT_ID;
   }
 }

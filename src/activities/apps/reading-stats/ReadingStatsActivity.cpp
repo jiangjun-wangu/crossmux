@@ -214,9 +214,9 @@ void drawDonut(const GfxRenderer& renderer, const int centerX, const int centerY
 
   char label[8];
   snprintf(label, sizeof(label), "%d%%", percent);
-  const int textWidth = renderer.getTextWidth(NOTOSERIF_18_FONT_ID, label, EpdFontFamily::BOLD);
-  const int textHeight = renderer.getLineHeight(NOTOSERIF_18_FONT_ID);
-  renderer.drawText(NOTOSERIF_18_FONT_ID, centerX - textWidth / 2, centerY - textHeight / 2, label, true,
+  const int textWidth = renderer.getTextWidth(SERIF_18_FONT_ID, label, EpdFontFamily::BOLD);
+  const int textHeight = renderer.getLineHeight(SERIF_18_FONT_ID);
+  renderer.drawText(SERIF_18_FONT_ID, centerX - textWidth / 2, centerY - textHeight / 2, label, true,
                     EpdFontFamily::BOLD);
 }
 
@@ -584,15 +584,15 @@ void ReadingStatsActivity::renderInx() {
   const int contentBottom = screenHeight - metrics.buttonHintsHeight;
   const Rect content{18, contentTop + 6, screenWidth - 36, std::max(1, contentBottom - contentTop - 12)};
   const auto& books = READING_STATS.getBooks();
-  const int pageTitleHeight = renderer.getLineHeight(NOTOSERIF_14_FONT_ID);
-  const int bookTitleHeight = renderer.getLineHeight(NOTOSERIF_12_FONT_ID);
+  const int pageTitleHeight = renderer.getLineHeight(SERIF_14_FONT_ID);
+  const int bookTitleHeight = renderer.getLineHeight(SERIF_12_FONT_ID);
   const int bodyHeight = renderer.getLineHeight(UI_10_FONT_ID);
   const int cellHeight = statsCellHeight(renderer);
 
   if (selectedIndex == 0 || books.empty()) {
     int top = content.y;
     if (usesMainTabBar()) {
-      drawCenteredClippedText(renderer, NOTOSERIF_14_FONT_ID, Rect{content.x, top + 4, content.width, pageTitleHeight},
+      drawCenteredClippedText(renderer, SERIF_14_FONT_ID, Rect{content.x, top + 4, content.width, pageTitleHeight},
                               tr(STR_READING_STATS), EpdFontFamily::BOLD);
       top += pageTitleHeight + 8;
     }
@@ -624,7 +624,7 @@ void ReadingStatsActivity::renderInx() {
       const int textX = cover.x + cover.width + 18;
       const int textWidth = recent.x + recent.width - textX;
       const int titleY = recent.y + 8;
-      drawClippedText(renderer, NOTOSERIF_12_FONT_ID, Rect{textX, titleY, textWidth, bookTitleHeight},
+      drawClippedText(renderer, SERIF_12_FONT_ID, Rect{textX, titleY, textWidth, bookTitleHeight},
                       titleOf(recentBook), EpdFontFamily::BOLD);
       if (!recentBook.author.empty()) {
         drawClippedText(renderer, UI_10_FONT_ID,
@@ -691,7 +691,7 @@ void ReadingStatsActivity::renderInx() {
     const Rect footer{content.x, grid.y + grid.height, content.width, footerHeight};
 
     if (usesMainTabBar()) {
-      drawClippedText(renderer, NOTOSERIF_14_FONT_ID,
+      drawClippedText(renderer, SERIF_14_FONT_ID,
                       Rect{screenTitle.x, screenTitle.y + 4, screenTitle.width, pageTitleHeight}, tr(STR_READING_STATS),
                       EpdFontFamily::BOLD);
     }
@@ -705,7 +705,7 @@ void ReadingStatsActivity::renderInx() {
     const int donutRadius = std::min(std::max(18, donutBounds * 31 / 100), std::max(18, donutBounds / 2 - 4));
     drawDonut(renderer, hero.x + hero.width * 3 / 4, hero.y + hero.height / 2, donutRadius, book.lastProgressPercent);
 
-    drawClippedText(renderer, NOTOSERIF_12_FONT_ID, Rect{metadata.x, metadata.y + 4, metadata.width, bookTitleHeight},
+    drawClippedText(renderer, SERIF_12_FONT_ID, Rect{metadata.x, metadata.y + 4, metadata.width, bookTitleHeight},
                     titleOf(book), EpdFontFamily::ITALIC);
     if (!book.author.empty()) {
       drawClippedText(renderer, UI_10_FONT_ID,

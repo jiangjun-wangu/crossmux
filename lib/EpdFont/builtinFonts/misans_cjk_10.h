@@ -3,7 +3,7 @@
  * name: misans_cjk_10
  * size: 10
  * mode: 2-bit
- * Command used: fontconvert.py misans_cjk_10 10 instanced_fonts/NotoSansSC/NotoSansSC-Regular.cncommon.otf --2bit --additional-intervals 0x4E00,0x9FFF --additional-intervals 0x3000,0x303F --additional-intervals 0xFF00,0xFFEF
+ * Command used: fontconvert.py misans_cjk_10 10 instanced_fonts/MiSans/MiSans-Regular.cncommon.ttf --2bit --additional-intervals 0x4E00,0x9FFF --additional-intervals 0x3000,0x303F --additional-intervals 0xFF00,0xFFEF
  */
 #pragma once
 #include "EpdFontData.h"

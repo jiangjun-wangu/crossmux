@@ -7,7 +7,7 @@
 #include <builtinFonts/misans_cjk_8.h>
 #include <builtinFonts/misans_cjk_10.h>
 #include <builtinFonts/misans_cjk_12.h>
-#include <builtinFonts/zen72.h>
+#include <builtinFonts/mi72.h>
 #include <builtinFonts/misans_latin_10_bold.h>
 #include <builtinFonts/misans_latin_10_medium.h>
 #include <builtinFonts/misans_latin_12_bold.h>

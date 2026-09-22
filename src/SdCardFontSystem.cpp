@@ -41,7 +41,7 @@ constexpr UiFontSize kUiFontSizes[] = {
 
 void SdCardFontSystem::begin(GfxRenderer& renderer) {
   registry_.discover();
-  adoptCompleteChineseNotoSans();
+  adoptCompleteChineseMiSans();
 
   // Register this system as the SD font ID resolver in settings.
   // Uses a static trampoline since CrossPointSettings stores a plain function pointer.
@@ -80,7 +80,7 @@ void SdCardFontSystem::ensureLoaded(GfxRenderer& renderer, bool allowFlashCache)
   if (registryWasDirty) {
     LOG_DBG("SDFS", "Registry dirty — re-discovering fonts");
     registry_.discover();
-    adoptCompleteChineseNotoSans();
+    adoptCompleteChineseMiSans();
   }
 
   const char* wantedFamily = SETTINGS.sdFontFamilyName;
@@ -142,7 +142,7 @@ void SdCardFontSystem::ensureLoaded(GfxRenderer& renderer, bool allowFlashCache)
 
 void SdCardFontSystem::releaseLoadedFont(GfxRenderer& renderer) { manager_.unloadAll(renderer); }
 
-bool SdCardFontSystem::adoptCompleteChineseNotoSans() {
+bool SdCardFontSystem::adoptCompleteChineseMiSans() {
 #ifdef ENABLE_CHINESE_VERSION
   if (SETTINGS.contentProfile != CrossPointSettings::ContentProfile::China || SETTINGS.sdFontFamilyName[0] != '\0' ||
       !registry_.findFamily(COMPLETE_CHINESE_MISANS_FAMILY))
@@ -150,7 +150,7 @@ bool SdCardFontSystem::adoptCompleteChineseNotoSans() {
 
   strncpy(SETTINGS.sdFontFamilyName, COMPLETE_CHINESE_MISANS_FAMILY, sizeof(SETTINGS.sdFontFamilyName) - 1);
   SETTINGS.sdFontFamilyName[sizeof(SETTINGS.sdFontFamilyName) - 1] = '\0';
-  SETTINGS.fontFamily = CrossPointSettings::NOTOSANS;
+  SETTINGS.fontFamily = CrossPointSettings::FONT_SANS;
   SETTINGS.sdFontFlashPreload = 0;
   if (!SETTINGS.saveToFile()) {
     LOG_ERR("SDFS", "Failed to save automatic MiSans selection");

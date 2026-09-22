@@ -9,14 +9,14 @@ echo "#pragma once"
 echo ""
 
 # 8 个已废弃的 reader 字体 ID（对应字体文件已删，保留值供 main.cpp 的兜底逻辑使用）
-echo "#define NOTOSERIF_12_FONT_ID (778531645)"
-echo "#define NOTOSERIF_14_FONT_ID (-928381217)"
-echo "#define NOTOSERIF_16_FONT_ID (17214534)"
-echo "#define NOTOSERIF_18_FONT_ID (840051567)"
-echo "#define NOTOSANS_12_FONT_ID (1597191560)"
-echo "#define NOTOSANS_14_FONT_ID (-1413326613)"
-echo "#define NOTOSANS_16_FONT_ID (116566294)"
-echo "#define NOTOSANS_18_FONT_ID (-348426591)"
+echo "#define SERIF_12_FONT_ID (778531645)"
+echo "#define SERIF_14_FONT_ID (-928381217)"
+echo "#define SERIF_16_FONT_ID (17214534)"
+echo "#define SERIF_18_FONT_ID (840051567)"
+echo "#define SANS_12_FONT_ID (1597191560)"
+echo "#define SANS_14_FONT_ID (-1413326613)"
+echo "#define SANS_16_FONT_ID (116566294)"
+echo "#define SANS_18_FONT_ID (-348426591)"
 
 # 3 个活跃 UI 字体 ID：按字体文件内容 SHA256 哈希重算
 echo "#define UI_10_FONT_ID ($(
@@ -43,8 +43,8 @@ echo ""
 echo "// Font ID 0 is reserved as the \"not found\" sentinel."
 echo "// Guard against any hash accidentally producing 0."
 for id in \
-  NOTOSERIF_12_FONT_ID NOTOSERIF_14_FONT_ID NOTOSERIF_16_FONT_ID NOTOSERIF_18_FONT_ID \
-  NOTOSANS_12_FONT_ID NOTOSANS_14_FONT_ID NOTOSANS_16_FONT_ID NOTOSANS_18_FONT_ID \
+  SERIF_12_FONT_ID SERIF_14_FONT_ID SERIF_16_FONT_ID SERIF_18_FONT_ID \
+  SANS_12_FONT_ID SANS_14_FONT_ID SANS_16_FONT_ID SANS_18_FONT_ID \
   UI_10_FONT_ID UI_12_FONT_ID SMALL_FONT_ID
 do
   echo "static_assert($id != 0, \"Font ID collision with sentinel\");"

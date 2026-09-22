@@ -112,7 +112,7 @@ const char* weekdayName(int wd) {
 // ===== 字体 =====
 // 大字：内置 72pt 思源黑体（12 汉字：零一二三四五六七八九十时）
 // 小字：内置 UI 12pt
-constexpr int kSmallFontId = NOTOSANS_12_FONT_ID;
+constexpr int kSmallFontId = SANS_12_FONT_ID;
 // 与 main.cpp 的 ZEN_72_FONT_ID 保持一致
 constexpr int kBigFontId = 0x434A4B48;
 

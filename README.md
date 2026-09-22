@@ -70,7 +70,7 @@ platformio run -e waveshare_epaper_397 -t upload
 - 支持 **8–36pt 共 15 档偶数点大小**（详见 [docs/misans-sd-fonts.md](./docs/misans-sd-fonts.md)）
 - 生成命令：
 
-  python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18,20,22,24,26,28,30,32,34,36 --style regular lib/EpdFont/builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf --output-dir /tmp/misans/
+  python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18,20,22,24,26,28,30,32,34,36 --style regular lib/EpdFont/builtinFonts/source/MiSans/MiSans-Regular.ttf --output-dir /tmp/misans/
 
 ### 3. 阅读 / UI 字体分工
 
@@ -113,7 +113,7 @@ platformio run -e waveshare_epaper_397 -t upload
 
 ### 7. 汉字钟（ZenHomeFace）
 
-- 72pt 汉字字体（12 汉字 + 0-9 数字），文件 zen72.h
+- 72pt 汉字字体（12 汉字 + 0-9 数字），文件 mi72.h
 - 时间表达：
   - 小时：1-10 点「一」~「十」+「时」；11-19 点「十」「一」~「十」「九」；20 点「二」「十」；21-24 点「二」「一」~「二」「四」
   - 分钟：0「时」；1-9「零」「X」；10「一」「十」；11-19「十」「X」；20「二」「十」；21-29「二」「X」；30/40/50「三/四/五」「十」；31-59 对应十位 + 个位
@@ -126,7 +126,7 @@ platformio run -e waveshare_epaper_397 -t upload
 
 - 删除 ChineseAlmanac 里的宜忌池（kYiPool / kJiPool）
 - 删除 ChineseCalendarFace 里的 formatClash() / drawYiJiBox() / 宜忌卡片
-- hero 数字改用 zen72 字体渲染
+- hero 数字改用 mi72 字体渲染
 
 ### 9. 键盘布局只保留英文 QWERTY
 
@@ -205,7 +205,7 @@ preload 机制会把选中的 SD 字体拷贝到未激活的 OTA 槽，加速阅
 | Apps 菜单 | src/activities/apps/AppsMenuActivity.cpp |
 | ActivityManager | src/activities/ActivityManager.{h,cpp} |
 | 字体 ID | src/fontIds.h |
-| 内置字体 | lib/EpdFont/builtinFonts/misans_cjk_*.h、zen72.h |
+| 内置字体 | lib/EpdFont/builtinFonts/misans_cjk_*.h、mi72.h |
 | 字体生成脚本 | lib/EpdFont/scripts/build-cn-builtin-fonts.sh |
 | i18n 生成 | scripts/gen_i18n.py |
 | UI 主题 | src/components/UITheme.cpp、src/components/themes/ |
@@ -256,3 +256,16 @@ preload 机制会把选中的 SD 字体拷贝到未激活的 OTA 槽，加速阅
 
 **模拟器限制**：模拟器 SDK 忽略窗口坐标，看不到逐条带效果；
 真机才能看到完整的翻页动画。
+
+
+## 字体（2026-09-23 更新）
+
+全系统统一使用小米 **MiSans** 字体（官方版，MD5 验证）。
+
+- **内置字体**：UI 拉丁（8/10/12pt）、CJK（8/10/12/14/16/18pt）、汉字钟（72pt）
+- **SD 卡字体**：阅读正文 8-36pt，路径 `/fonts/MiSans/MiSans_<size>.cpfont`
+- **来源**：[MiSans 官网](https://hyperos.mi.com/font/zh/download/)
+- **版权**：Copyright (c) 2020-2025 Beijing Xiaomi Mobile Software Co.,Ltd.
+
+字体 ID 宏 `NOTOSANS_*` / `NOTOSERIF_*` 已重命名为 `SANS_*` / `SERIF_*`
+（ID 值不变，settings 兼容）。

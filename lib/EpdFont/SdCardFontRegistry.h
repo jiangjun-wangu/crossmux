@@ -7,14 +7,14 @@
 struct SdCardFontFileInfo {
   std::string path;   // v4 on-disk naming: "/<root>/<Family>/<Family>_<size>.cpfont"
                       // where <root> is "/.fonts" (preferred, hidden) or "/fonts" (visible).
-                      // e.g. "/.fonts/NotoSansCJK/NotoSansCJK_14.cpfont"
+                      // e.g. "/.fonts/MiSans/MiSans_14.cpfont"
   uint8_t pointSize;  // parsed from filename: 14
   uint8_t style;      // always 0 in v4 (all 4 styles bundled in one file);
                       // kept for potential future formats
 };
 
 struct SdCardFontFamilyInfo {
-  std::string name;  // directory name, e.g. "NotoSansCJK"
+  std::string name;  // directory name, e.g. "MiSans"
   std::vector<SdCardFontFileInfo> files;
 
   const SdCardFontFileInfo* findFile(uint8_t size, uint8_t style = 0) const;

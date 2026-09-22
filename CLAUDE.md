@@ -59,7 +59,7 @@ sudo mount -t drvfs F: /mnt/f -o metadata,uid=1000,gid=1000,umask=022
 
 cd ~/crossmux
 source .venv/bin/activate
-python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18,20,22,24,26,28,30,32,34,36 --style regular lib/EpdFont/builtinFonts/source/NotoSansSC/NotoSansSC-Regular.otf --output-dir /tmp/misans/
+python3 lib/EpdFont/scripts/fontconvert_sdcard.py --name MiSans --intervals cjk --sizes 8,10,12,14,16,18,20,22,24,26,28,30,32,34,36 --style regular lib/EpdFont/builtinFonts/source/MiSans/MiSans-Regular.ttf --output-dir /tmp/misans/
 
 ### 生成内置字体（编译进固件）
 
@@ -98,9 +98,9 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 |---|---|---|
 | 内置 UI | MiSans GB2312 6763 字，8/10/12pt | misans_cjk_*.h |
 | SD 阅读 | MiSans 全量 CJK，18/20/24pt | 真机 SD /fonts/MiSans/ |
-| 汉字钟 | zen72.h 72pt 12 汉字 | zen72.h |
-| 状态栏数字 | ubuntu_10/12 | ubuntu_*.h |
-| 小字号 | notosans_8_regular | notosans_8_regular.h |
+| 汉字钟 | mi72.h 72pt 12 汉字 | mi72.h |
+| 状态栏数字 | misans_latin_8_regular | misans_latin_8_regular.h |
+| 小字号 | misans_latin_8_regular | misans_latin_8_regular.h |
 
 ### 关键设置
 
@@ -121,7 +121,7 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 | Apps 菜单 | src/activities/apps/AppsMenuActivity.cpp |
 | 阅读字体设置 | src/activities/settings/TextSettingsActivity.cpp |
 | 字体 ID | src/fontIds.h |
-| 内置字体 | lib/EpdFont/builtinFonts/misans_cjk_*.h、zen72.h |
+| 内置字体 | lib/EpdFont/builtinFonts/misans_cjk_*.h、mi72.h |
 | 字体生成 | lib/EpdFont/scripts/build-cn-builtin-fonts.sh |
 | SD 字体生成 | lib/EpdFont/scripts/fontconvert_sdcard.py |
 | SD 字体文档 | docs/misans-sd-fonts.md |
@@ -236,3 +236,65 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 模拟器 SDK 的 HalDisplay::displayWindow 忽略坐标、不做 present，
 因此模拟器里看不到逐条带效果，只能看日志中的 [ANIM] start/done。
 真机才有真实墨水屏刷新时间。
+
+
+## 字体架构（2026-09-23 更新）
+
+全系统统一 **小米 MiSans**（官方版，MD5 验证）。
+
+### 内置字体（Flash，随固件）
+
+| 用途 | 文件 | 来源 |
+|---|---|---|
+| UI 拉丁 8/10/12pt | misans_latin_*.h | MiSans-Regular/Medium/Bold.ttf |
+| CJK 8/10/12pt | misans_cjk_8/10/12.h | MiSans-Regular.ttf（3500 常用字）|
+| CJK 14/16/18pt | misans_cjk_14/16/18.h | MiSans-Regular.ttf（i18n 字）|
+| 汉字钟 72pt | mi72.h | MiSans-Regular.ttf（12 汉字）|
+
+### 源字体位置与校验
+
+    lib/EpdFont/builtinFonts/source/MiSans/
+      MiSans-Regular.ttf   MD5 f290c996741aa1c8775d8c28372608af
+      MiSans-Medium.ttf    MD5 d4ea974a987217b683b90c764fdff31f
+      MiSans-Bold.ttf      MD5 9b9b94c00eb740134af55ff456235cbe
+
+来源：https://hyperos.mi.com/font/zh/download/ 的 MiSans.zip
+版权：Copyright (c) 2020-2025 Beijing Xiaomi Mobile Software Co.,Ltd.
+
+### SD 卡字体（运行时加载，非固件）
+
+| 项 | 说明 |
+|---|---|
+| 目录 | /fonts/MiSans/ 或 /.fonts/MiSans/ |
+| 文件 | MiSans_<size>.cpfont（size 8-36）|
+| 生成 | fontconvert_sdcard.py --name MiSans --intervals cjk |
+| 源 | source/MiSans/MiSans-Regular.ttf |
+
+### 字体 ID 宏改名（值未变，settings.bin 兼容）
+
+| 旧 | 新 |
+|---|---|
+| NOTOSANS_12/14/16/18_FONT_ID | SANS_12/14/16/18_FONT_ID |
+| NOTOSERIF_12/14/16/18_FONT_ID | SERIF_12/14/16/18_FONT_ID |
+| CrossPointSettings::NOTOSANS | FONT_SANS |
+| CrossPointSettings::NOTOSERIF | FONT_SERIF |
+| STR_NOTO_SANS / STR_NOTO_SERIF | STR_FONT_SANS / STR_FONT_SERIF |
+
+### 已删除的字体源
+
+- NotoSans / NotoSerif / NotoSansSC / NotoSansHebrew / NotoSansArabic
+- Ubuntu / OpenDyslexic
+- 备份在 ~/crossmux_backups/20260923_*_noto_source_backup/ 等
+
+说明：上游标为 NotoSansSC 的文件经验证与 MiSans 字形完全一致
+（glyph count 29758 / glyph order / 轮廓哈希全部相同），实际本就是
+MiSans 重命名。现已全部换成官方 MiSans 源。
+
+### 生成脚本
+
+| 脚本 | 用途 |
+|---|---|
+| build-cn-builtin-fonts.sh | 内置 CJK 6 档（源 MiSans-Regular.ttf）|
+| build-font-ids.sh | 生成 fontIds.h |
+| fontconvert_sdcard.py | SD 卡 cpfont |
+| build-sd-fonts.py | SD 字体批量构建（fallback MiSans）|

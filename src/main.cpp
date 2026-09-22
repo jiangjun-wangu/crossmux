@@ -146,8 +146,8 @@ EpdFont cjk12Font(&misans_cjk_12);
 EpdFontFamily cjk12FontFamily(&cjk12Font);
 
 // 汉字钟专用 72pt 内置字体（12 汉字：零一二三四五六七八九十时）
-EpdFont zen72Font(&zen72);
-EpdFontFamily zen72FontFamily(&zen72Font);
+EpdFont mi72Font(&mi72);
+EpdFontFamily mi72FontFamily(&mi72Font);
 constexpr int CJK_UI_8_FONT_ID = 0x434A4B08;
 constexpr int CJK_UI_10_FONT_ID = 0x434A4B0A;
 constexpr int CJK_UI_12_FONT_ID = 0x434A4B0C;
@@ -393,16 +393,16 @@ bool setupDisplayAndFonts(bool seamless = false, bool logSdFontLoadHeap = false)
   }
   fontCacheManager.setFontDecompressor(&fontDecompressor);
   renderer.setFontCacheManager(&fontCacheManager);
-  renderer.insertFont(NOTOSERIF_14_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SERIF_14_FONT_ID, offlineReaderFontFamily);
 #ifndef OMIT_FONTS
-  renderer.insertFont(NOTOSERIF_12_FONT_ID, offlineReaderFontFamily);
-  renderer.insertFont(NOTOSERIF_16_FONT_ID, offlineReaderFontFamily);
-  renderer.insertFont(NOTOSERIF_18_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SERIF_12_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SERIF_16_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SERIF_18_FONT_ID, offlineReaderFontFamily);
 
-  renderer.insertFont(NOTOSANS_12_FONT_ID, offlineReaderFontFamily);
-  renderer.insertFont(NOTOSANS_14_FONT_ID, offlineReaderFontFamily);
-  renderer.insertFont(NOTOSANS_16_FONT_ID, offlineReaderFontFamily);
-  renderer.insertFont(NOTOSANS_18_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SANS_12_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SANS_14_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SANS_16_FONT_ID, offlineReaderFontFamily);
+  renderer.insertFont(SANS_18_FONT_ID, offlineReaderFontFamily);
 #endif  // OMIT_FONTS
   renderer.insertFont(UI_10_FONT_ID, ui10FontFamily);
   renderer.insertFont(UI_12_FONT_ID, ui12FontFamily);
@@ -410,7 +410,7 @@ bool setupDisplayAndFonts(bool seamless = false, bool logSdFontLoadHeap = false)
   renderer.insertFont(CJK_UI_8_FONT_ID, cjk8FontFamily);
   renderer.insertFont(CJK_UI_10_FONT_ID, cjk10FontFamily);
   renderer.insertFont(CJK_UI_12_FONT_ID, cjk12FontFamily);
-  renderer.insertFont(ZEN_72_FONT_ID, zen72FontFamily);
+  renderer.insertFont(ZEN_72_FONT_ID, mi72FontFamily);
   renderer.setFallbackFont(SMALL_FONT_ID, CJK_UI_8_FONT_ID);
   renderer.setFallbackFont(UI_10_FONT_ID, CJK_UI_10_FONT_ID);
   renderer.setFallbackFont(UI_12_FONT_ID, CJK_UI_12_FONT_ID);

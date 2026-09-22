@@ -75,7 +75,7 @@ const char* TextSettingsActivity::tabLabel(const int index) const { return I18N.
 void TextSettingsActivity::onEnter() {
   UiTabListActivity::onEnter();
 
-  if (sdFontSystem.adoptCompleteChineseNotoSans()) initialFontState_ = InitialFontState::Changed;
+  if (sdFontSystem.adoptCompleteChineseMiSans()) initialFontState_ = InitialFontState::Changed;
   {
     RenderLock lock(*this);
     sdFontSystem.ensureLoaded(renderer, false);
@@ -91,11 +91,11 @@ void TextSettingsActivity::onEnter() {
   fonts_.reserve(CrossPointSettings::BUILTIN_FONT_COUNT + (registry_ ? registry_->getFamilyCount() : 0));
 #ifdef ENABLE_CHINESE_VERSION
   if (!registry_ || !registry_->findFamily(SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY)) {
-    fonts_.push_back({I18N.get(StrId::STR_NOTO_SANS), true, static_cast<uint8_t>(CrossPointSettings::NOTOSANS)});
+    fonts_.push_back({I18N.get(StrId::STR_FONT_SANS), true, static_cast<uint8_t>(CrossPointSettings::FONT_SANS)});
   }
 #else
-  fonts_.push_back({I18N.get(StrId::STR_NOTO_SERIF), true, static_cast<uint8_t>(CrossPointSettings::NOTOSERIF)});
-  fonts_.push_back({I18N.get(StrId::STR_NOTO_SANS), true, static_cast<uint8_t>(CrossPointSettings::NOTOSANS)});
+  fonts_.push_back({I18N.get(StrId::STR_FONT_SERIF), true, static_cast<uint8_t>(CrossPointSettings::FONT_SERIF)});
+  fonts_.push_back({I18N.get(StrId::STR_FONT_SANS), true, static_cast<uint8_t>(CrossPointSettings::FONT_SANS)});
 #endif
   if (registry_) {
     const auto& families = registry_->getFamilies();

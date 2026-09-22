@@ -25,10 +25,10 @@ inline SettingInfo buildFontFamilySetting(const SdCardFontRegistry* registry) {
   std::vector<StrId> enumValues;
 #ifdef ENABLE_CHINESE_VERSION
   if (!registry || !registry->findFamily(SdCardFontSystem::COMPLETE_CHINESE_MISANS_FAMILY)) {
-    enumValues.push_back(StrId::STR_NOTO_SANS);
+    enumValues.push_back(StrId::STR_FONT_SANS);
   }
 #else
-  enumValues = {StrId::STR_NOTO_SERIF, StrId::STR_NOTO_SANS};
+  enumValues = {StrId::STR_FONT_SERIF, StrId::STR_FONT_SANS};
 #endif
   const int builtinOptionCount = static_cast<int>(enumValues.size());
 
@@ -72,7 +72,7 @@ inline SettingInfo buildFontFamilySetting(const SdCardFontRegistry* registry) {
   s.valueSetter = [registry, builtinOptionCount](uint8_t v) {
     if (v < builtinOptionCount) {
 #ifdef ENABLE_CHINESE_VERSION
-      SETTINGS.fontFamily = CrossPointSettings::NOTOSANS;
+      SETTINGS.fontFamily = CrossPointSettings::FONT_SANS;
 #else
       SETTINGS.fontFamily = v;
 #endif
@@ -264,7 +264,7 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
         // Built-in font-family entry. Replaced per-call with a registry-aware
         // version when SD fonts are installed.
         SettingInfo::Enum(StrId::STR_FONT_FAMILY, &CrossPointSettings::fontFamily,
-                          {StrId::STR_NOTO_SERIF, StrId::STR_NOTO_SANS}, "fontFamily", StrId::STR_CAT_READER)
+                          {StrId::STR_FONT_SERIF, StrId::STR_FONT_SANS}, "fontFamily", StrId::STR_CAT_READER)
             .withTextSettings(),
         // Placeholder: the selectable sizes depend on the active font family, so
         // this entry is always replaced by buildFontSizeSetting() below. It only

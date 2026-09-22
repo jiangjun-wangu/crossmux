@@ -3,7 +3,7 @@
  * name: misans_cjk_14
  * size: 14
  * mode: 2-bit
- * Command used: fontconvert.py misans_cjk_14 14 instanced_fonts/NotoSansSC/NotoSansSC-Regular.i18nonly.otf --2bit --additional-intervals 0x4E00,0x9FFF --additional-intervals 0x3000,0x303F --additional-intervals 0xFF00,0xFFEF
+ * Command used: fontconvert.py misans_cjk_14 14 instanced_fonts/MiSans/MiSans-Regular.i18nonly.ttf --2bit --additional-intervals 0x4E00,0x9FFF --additional-intervals 0x3000,0x303F --additional-intervals 0xFF00,0xFFEF
  */
 #pragma once
 #include "EpdFontData.h"

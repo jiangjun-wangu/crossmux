@@ -70,17 +70,6 @@ families:
       italic:     {url: "https://raw.githubusercontent.com/adobe-fonts/source-serif/release/TTF/SourceSerif4-It.ttf"}
       bolditalic: {url: "https://raw.githubusercontent.com/adobe-fonts/source-serif/release/TTF/SourceSerif4-BoldIt.ttf"}
 
-  - name: NotoSerifExtended
-    description: "Serif (Latin, Greek, Cyrillic)"
-    scripts: [latin, cyrillic, greek]
-    intervals: latin-ext,greek,cyrillic,ipa-chars
-    sizes: [12, 14, 16, 18]
-    styles:
-      regular:    {url: "https://raw.githubusercontent.com/notofonts/NotoSerif/main/fonts/ttf/unhinted/instance_ttf/NotoSerif-Regular.ttf"}
-      bold:       {url: "https://raw.githubusercontent.com/notofonts/NotoSerif/main/fonts/ttf/unhinted/instance_ttf/NotoSerif-Bold.ttf"}
-      italic:     {url: "https://raw.githubusercontent.com/notofonts/NotoSerif-Italic/main/fonts/ttf/unhinted/instance_ttf/NotoSerif-Italic.ttf"}
-      bolditalic: {url: "https://raw.githubusercontent.com/notofonts/NotoSerif-Italic/main/fonts/ttf/unhinted/instance_ttf/NotoSerif-BoldItalic.ttf"}
-
   - name: Merriweather
     description: "Warm serif for long-form reading (Latin, Cyrillic)"
     scripts: [latin, cyrillic]
@@ -171,17 +160,6 @@ families:
 
   # ── Sans-serif ─────────────────────────────────────────────────────────
 
-  - name: NotoSansExtended
-    description: "Sans-serif (Latin, Greek, Cyrillic, Georgian, Armenian, Ethiopic)"
-    scripts: [latin, cyrillic, greek, georgian, armenian, ethiopic]
-    intervals: latin-ext,greek,cyrillic,georgian,armenian,ethiopic,ipa-chars
-    sizes: [12, 14, 16, 18]
-    styles:
-      regular:    {path: "builtinFonts/source/NotoSans/NotoSans-Regular.ttf"}
-      bold:       {path: "builtinFonts/source/NotoSans/NotoSans-Bold.ttf"}
-      italic:     {path: "builtinFonts/source/NotoSans/NotoSans-Italic.ttf"}
-      bolditalic: {path: "builtinFonts/source/NotoSans/NotoSans-BoldItalic.ttf"}
-
   - name: Inter
     description: "Modern sans-serif (Latin, Greek, Cyrillic)"
     scripts: [latin, cyrillic, greek]
@@ -251,17 +229,6 @@ families:
       bolditalic: {url: "https://raw.githubusercontent.com/adobe-fonts/source-code-pro/release/TTF/SourceCodePro-BoldIt.ttf"}
 
   # ── Dyslexia ───────────────────────────────────────────────────────────────
-
-  - name: OpenDyslexic
-    description: "Dyslexia-friendly font (Latin)"
-    scripts: [latin]
-    intervals: latin-ext,ipa-chars
-    sizes: [8, 10, 12, 14]
-    styles:
-      regular:    {path: "builtinFonts/source/OpenDyslexic/OpenDyslexic-Regular.otf"}
-      bold:       {path: "builtinFonts/source/OpenDyslexic/OpenDyslexic-Bold.otf"}
-      italic:     {path: "builtinFonts/source/OpenDyslexic/OpenDyslexic-Italic.otf"}
-      bolditalic: {path: "builtinFonts/source/OpenDyslexic/OpenDyslexic-BoldItalic.otf"}
 
   # ── Accessibility ──────────────────────────────────────────────────────
 

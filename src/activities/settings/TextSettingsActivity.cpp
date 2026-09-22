@@ -4,6 +4,7 @@
 #include <HalDisplay.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <HalStorage.h>
 #include <SdCardFontCache.h>
 #ifdef ENABLE_CHINESE_VERSION
 #include <Memory.h>
@@ -532,9 +533,41 @@ void TextSettingsActivity::exitAfterFinalFont(const ExitDestination destination)
     return;
   }
 
+  const auto* file = fontFileForFamily(currentFamilyIndex_, SETTINGS.fontPointSize);
+
+  // Pre-check: if the cpfont is larger than the Flash cache capacity, skip
+  // the preload entirely and fall back to SD-direct reads. Show a dedicated
+  // message so the user knows why preload was skipped (vs. generic failure).
+  size_t cpfontSize = 0;
+  if (file) {
+    HalFile f;
+    if (Storage.openFileForRead("TEXT", file->path, f)) {
+      cpfontSize = f.fileSize();
+    }
+  }
+  const size_t cacheCapacity = SdCardFontCache::capacity();
+  if (cpfontSize > 0 && cacheCapacity > 0 && cpfontSize > cacheCapacity) {
+    LOG_INF("TEXT", "cpfont %u bytes > Flash cache %u bytes; skipping preload",
+            static_cast<unsigned>(cpfontSize), static_cast<unsigned>(cacheCapacity));
+    SETTINGS.sdFontFlashPreload = 0;
+    SETTINGS.saveToFile();
+    {
+      RenderLock lock(*this);
+      fontLoadState_.store(FontLoadState::Idle);
+      sdFontSystem.ensureLoaded(renderer, false);
+    }
+    exitInProgress_ = false;
+    ActivityResult result;
+    result.isCancelled = true;
+    setResult(std::move(result));
+    optionPopup_.show(StrId::STR_FONT_PRELOAD_TOO_LARGE, OK_OPTION, static_cast<int>(std::size(OK_OPTION)), 0,
+                      [this](int) { completeExit(); });
+    requestUpdate();
+    return;
+  }
+
   SETTINGS.sdFontFlashPreload = 1;
   SETTINGS.saveToFile();
-  const auto* file = fontFileForFamily(currentFamilyIndex_, SETTINGS.fontPointSize);
   const bool succeeded = file && preloadFont(*file, SETTINGS.sdFontFamilyName);
   {
     RenderLock lock(*this);

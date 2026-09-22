@@ -127,15 +127,15 @@ EpdFontFamily offlineReaderFontFamily(&offlineReaderFont);
 
 // International UI fonts remain primary; CJK subsets are selected only when
 // the primary is missing a Han glyph.
-EpdFont smallFont(&notosans_8_regular);
+EpdFont smallFont(&misans_latin_8_regular);
 EpdFontFamily smallFontFamily(&smallFont);
 
-EpdFont ui10MediumFont(&ubuntu_10_medium);
-EpdFont ui10BoldFont(&ubuntu_10_bold);
+EpdFont ui10MediumFont(&misans_latin_10_medium);
+EpdFont ui10BoldFont(&misans_latin_10_bold);
 EpdFontFamily ui10FontFamily(&ui10MediumFont, &ui10BoldFont);
 
-EpdFont ui12MediumFont(&ubuntu_12_medium);
-EpdFont ui12BoldFont(&ubuntu_12_bold);
+EpdFont ui12MediumFont(&misans_latin_12_medium);
+EpdFont ui12BoldFont(&misans_latin_12_bold);
 EpdFontFamily ui12FontFamily(&ui12MediumFont, &ui12BoldFont);
 
 EpdFont cjk8Font(&misans_cjk_8);

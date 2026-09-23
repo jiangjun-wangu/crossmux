@@ -6,6 +6,66 @@
 项目路径：~/crossmux
 我这次要做：【微信读书多选批量下载】
 
+## 〇、项目概览
+
+| 项 | 值 |
+|---|---|
+| 目标 | CrossMux 移植到微雪 ESP32-S3-ePaper-3.97（中文墨水屏阅读器）|
+| 项目路径 | ~/crossmux（WSL 原生文件系统）|
+| 自己的 fork | https://github.com/jiangjun-wangu/crossmux |
+| 虚拟环境 | source .venv/bin/activate |
+| 备份目录 | ~/crossmux_backups/YYYYMMDD_HHMMSS[_说明]/ |
+
+### 硬件
+
+- ESP32-S3R8（双核 Xtensa LX7，240MHz）
+- 512KB SRAM + 8MB PSRAM
+- 16MB Flash（app 分区 6.4MB）
+- 3.97 英寸 800×480 4 阶灰度 SSD1677
+- 无触摸，滚轮（上下拨+按下+长按）+ 侧边按键
+
+### 编译状态（2026-09-23）
+
+| 项 | 值 |
+|---|---|
+| Flash | 6,427,659 / 6,553,600（98.1%，剩 126 KB）|
+| RAM | 30.3%（99,380 / 327,680）|
+| IRAM | 100%（已满，不做优化）|
+| 最新 commit | 0a253713 |
+
+**Flash 剩余不足 130 KB，改动前评估体积。**
+
+### 核心命令
+
+只编译模拟器：
+
+    clear
+    cd ~/crossmux
+    source .venv/bin/activate
+    platformio run -e simulator -t run_simulator
+
+编译真机固件 + 打开文件夹：
+
+    clear
+    cd ~/crossmux
+    source .venv/bin/activate
+    time platformio run -e waveshare_epaper_397 && {
+      FIRMWARE_DIR=".pio/build/waveshare_epaper_397"
+      WIN_PATH=$(wslpath -w "$(realpath "$FIRMWARE_DIR")")
+      ls -la "$FIRMWARE_DIR"/*.bin
+      echo "$WIN_PATH"
+      explorer.exe "$WIN_PATH" 2>/dev/null || true
+    }
+
+提交代码：
+
+    cd ~/crossmux
+    git add -A
+    git commit -m "描述"
+    git push origin main
+
+---
+
 ## 一、需求
 
 ### 交互
@@ -146,3 +206,88 @@ Flash 剩 <130 KB，改动前评估体积。
 ---
 
 文档版本：2026-09-23
+
+## 九、工作流规范（继承自 CLAUDE.md）
+
+### 提交规范（固定五步）
+
+1. 里程碑备份 → ~/crossmux_backups/YYYYMMDD_HHMMSS_说明/
+2. git add -A
+3. git commit -m "..."（分点说明改动）
+4. git push origin main
+5. git log --oneline -3 + git status --short 确认
+
+### 文档写入规范
+
+**用 printf 逐行追加，禁止 heredoc。**
+
+原因：heredoc 在 WSL 会被截断，终端卡在 > 或内容丢失。
+
+标准写法：
+
+    # 新建（每次一小段）
+    printf '%s
+' '第一行' '第二行' > /tmp/doc.md
+
+    # 追加
+    printf '%s
+' '追加内容' >> /tmp/doc.md
+
+    # 复制到目标
+    cp /tmp/doc.md docs/xxx.md
+
+    # 验证
+    wc -l docs/xxx.md
+
+禁止：
+- cat > file <<EOF ... EOF
+- python3 -c "..." < <(cat <<MARKER ...)
+- 一次追加超过 20 行
+
+### 编译记录规范
+
+每次编译完成后记录：时间 / 类型 / 耗时 / Flash / RAM / IRAM / 相对上次变化 / commit。
+
+记录位置：CLAUDE.md「编译历史」段（滚动保留最近 10 次）。
+
+### 烧录规范
+
+- **默认只烧 firmware.bin → 0x10000**
+- 分区表和 bootloader 未改，不需要重烧
+- 项目自带烧录工具会因 crossmux-sticky-v1 manifest 标签拒绝 app-only 烧录
+- 改用 flash_download_tool 手动烧：
+  - ESP32-S3 / Develop / DIO / 80MHz / 16MB / 起始 0x10000
+- 连 partitions.bin 一起烧会清空 NVS（WiFi、设置、进度）
+
+## 十、安全红线（绝对禁止）
+
+| 操作 | 读 | 写 |
+|---|---|---|
+| eFuse | 允许 | **绝对禁止** |
+| Secure Boot | 允许 | **绝对禁止** |
+| Flash 加密 | 允许 | **绝对禁止** |
+| 生产模式 | 允许 | **绝对禁止** |
+
+翻页动画专项安全约束（不适用于本次功能，但需知晓）：
+
+- 连续局刷 <= 10 次
+- 单次动画 <= 15s
+- 不使用自定义 LUT / 波形
+
+## 十一、新会话第一件事
+
+**跑文档「三、待探测项」的命令，贴回输出。**
+**不要跳过探测直接写代码。**
+
+探测输出会告诉我：
+1. advanceJob 完成钩子在哪
+2. loop 状态机如何驱动
+3. Operation 能否串行复用
+4. ShelfRecord 字段结构
+
+然后按「四、实现方案」阶段 2-5 逐步实现。
+
+---
+
+文档版本：2026-09-23
+对应 commit：0a253713

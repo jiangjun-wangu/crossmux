@@ -3,7 +3,19 @@
 ## 启动指令
 
 继续 CrossMux 微信读书「多选批量下载」功能。
+
+**开工前必读（按顺序）：**
+
+1. ~/crossmux/docs/weread-batch-download.md（本文件 · 任务自包含文档）
+2. ~/crossmux/CLAUDE.md（完整开发规范 · 强制约定/工作流/字体/动画/编译历史）
+
+读完后：
+- 按本文件「十一、新会话第一件事」执行（先跑探测命令）
+- 遵守 CLAUDE.md 的强制约定（模拟器优先 / 备份 / printf 写文档 / 五步提交）
+- 遵守安全红线（eFuse / Secure Boot / Flash 加密 / 生产模式 禁写）
+
 项目路径：~/crossmux
+工作环境：WSL，source .venv/bin/activate
 我这次要做：【微信读书多选批量下载】
 
 ## 〇、项目概览

@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <set>
 #include <vector>
 
 #include "activities/Activity.h"
@@ -41,7 +42,8 @@ class WeReadActivity final : public Activity {
     LogoutError,
     ClearingCache,
     CacheCleared,
-    CacheClearError
+    CacheClearError,
+    BatchSelect
   };
   enum class MainTab : uint8_t { Shelf, Manage };
   enum class MainFocus : uint8_t { Tabs, Content };
@@ -111,6 +113,12 @@ class WeReadActivity final : public Activity {
   bool wifiReleasePending_ = false;
   std::atomic<bool> downloadRenderPending_{false};
   std::atomic<bool> stageRenderPending_{false};
+  std::set<int> batchSelectedIndexes_;
+  std::vector<WeReadStore::ShelfRecord> batchQueue_;
+  std::vector<int> batchVisibleIndexes_;
+  size_t batchQueueIndex_ = 0;
+  uint32_t batchSuccess_ = 0;
+  uint32_t batchFailed_ = 0;
 
   bool refreshShelf();
   bool readShelf(int index, WeReadStore::ShelfRecord& record) const;
@@ -148,7 +156,9 @@ class WeReadActivity final : public Activity {
   void handleIntroductionInput();
   void buildIntroductionPages();
   bool drawDetailIntroduction(const Rect& bounds, bool selected);
-  void drawShelfGrid(const Rect& content, int selectedIndex, int frameSelection, bool contentFocused);
+  void drawShelfGrid(const Rect& content, int selectedIndex, int frameSelection, bool contentFocused,
+                    const std::set<int>* checkedIndexes = nullptr,
+                    const std::vector<int>* visibleIndexes = nullptr);
   void drawDisclaimer(const Rect& content);
   void drawBookDetail(const Rect& content, bool coverLoading = false);
   void drawIntroduction(const Rect& content);
@@ -168,6 +178,11 @@ class WeReadActivity final : public Activity {
   void handleMainTabInput();
   void handleManageInput();
   void handleShelfInput();
+  void enterBatchSelect();
+  void handleBatchSelectInput();
+  void startBatchDownload();
+  void startNextBatchItem();
+  void finishBatchDownload();
   void selectMainTab(MainTab tab);
   void moveShelfSelection(int index, int itemsPerPage);
   void handleErrorInput();

@@ -303,3 +303,45 @@ Flash 剩 <130 KB，改动前评估体积。
 
 文档版本：2026-09-23
 对应 commit：0a253713
+
+---
+
+## 十二、实现完成记录（2026-09-23）
+
+功能已完成，模拟器 + 真机编译通过。
+
+### 入口
+
+管理 Tab → 多本下载（新增菜单项）
+
+### 交互
+
+- 滚轮上下：移动光标（只遍历未下载书籍）
+- 短按确认：勾选 / 取消
+- 长按确认（700ms）：弹确认框 → 开始批量下载
+- 下载中按 Back：中断，已完成保留
+- 全部完成：弹汇总「成功 N / 失败 M」
+
+### 已下载书自动隐藏
+
+进入多本下载时，先扫一遍书架，跳过 Storage.exists(finalBookPath) 为真的书。
+若全部已下载，弹「没有未下载书籍」。
+
+### 关键改动文件
+
+- src/activities/apps/weread/webapi/WeReadActivity.{h,cpp}
+- lib/I18n/translations/{chinese,english}.yaml
+
+### 关键成员
+
+- std::set<int> batchSelectedIndexes_   勾选的书架索引
+- std::vector<ShelfRecord> batchQueue_   下载队列
+- std::vector<int> batchVisibleIndexes_  未下载书籍的书架索引
+- size_t batchQueueIndex_                当前队列位置
+- uint32_t batchSuccess_ / batchFailed_  成功/失败计数
+
+### 编译状态
+
+- Flash: 6,430,407 / 6,553,600（98.1%，剩 123 KB）
+- RAM: 99,380 / 327,680（30.3%）
+- commit: 3782dbfa（提交前）

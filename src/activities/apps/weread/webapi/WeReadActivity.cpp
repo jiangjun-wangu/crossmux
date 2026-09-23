@@ -36,7 +36,7 @@ namespace {
 
 static_assert(sizeof(WeReadClient::Operation) <= 8 * 1024, "WeRead workspace exceeds its fixed heap budget");
 
-enum class ManageAction : uint8_t { Refresh, ClearCache, Logout };
+enum class ManageAction : uint8_t { Refresh, ClearCache, BatchDownload, Logout };
 
 struct ManageEntry {
   StrId title;
@@ -46,6 +46,7 @@ struct ManageEntry {
 constexpr ManageEntry kManageEntries[] = {
     {StrId::STR_WEREAD_MENU_REFRESH, ManageAction::Refresh},
     {StrId::STR_WEREAD_MENU_CLEAR_CACHE, ManageAction::ClearCache},
+    {StrId::STR_WEREAD_MENU_BATCH_DOWNLOAD, ManageAction::BatchDownload},
     {StrId::STR_WEREAD_MENU_LOGOUT, ManageAction::Logout},
 };
 
@@ -949,12 +950,29 @@ void WeReadActivity::advanceJob() {
           requestUpdate();
           return;
         case Job::Download:
+          if (!batchQueue_.empty()) {
+            batchSuccess_++;
+            batchQueueIndex_++;
+            if (batchQueueIndex_ < batchQueue_.size()) {
+              startNextBatchItem();
+            } else {
+              finishBatchDownload();
+            }
+            return;
+          }
           state_.store(State::OpenBook);
           openBook(operation_.finalPath());
           return;
       }
       return;
     case WeReadClient::Operation::Event::Cancelled:
+      if (!batchQueue_.empty()) {
+        batchQueue_.clear();
+        batchSelectedIndexes_.clear();
+        batchQueueIndex_ = 0;
+        batchSuccess_ = 0;
+        batchFailed_ = 0;
+      }
       refreshShelf();
       shelfCoverStopped_ = false;
       state_.store(State::Home);
@@ -967,6 +985,16 @@ void WeReadActivity::advanceJob() {
         loadSelectedDetail(preserveUi);
         state_.store(State::Detail);
         requestUpdate();
+        return;
+      }
+      if (retryJob_ == Job::Download && !batchQueue_.empty()) {
+        batchFailed_++;
+        batchQueueIndex_++;
+        if (batchQueueIndex_ < batchQueue_.size()) {
+          startNextBatchItem();
+        } else {
+          finishBatchDownload();
+        }
         return;
       }
       error_ = operation_.error();
@@ -1545,6 +1573,115 @@ void WeReadActivity::handleMainTabInput() {
   selectMainTab(mainTab_.load() == MainTab::Shelf ? MainTab::Manage : MainTab::Shelf);
 }
 
+void WeReadActivity::enterBatchSelect() {
+  batchSelectedIndexes_.clear();
+  batchQueue_.clear();
+  batchQueueIndex_ = 0;
+  batchSuccess_ = 0;
+  batchFailed_ = 0;
+  batchVisibleIndexes_.clear();
+  for (uint32_t i = 0; i < shelfCount_; ++i) {
+    WeReadStore::ShelfRecord book;
+    if (!readShelf(static_cast<int>(i), book)) continue;
+    if (Storage.exists(WeReadStore::finalBookPath(book).c_str())) continue;
+    batchVisibleIndexes_.push_back(static_cast<int>(i));
+  }
+  if (batchVisibleIndexes_.empty()) {
+    state_.store(State::Home);
+    requestUpdateAndWait();
+    const char* okOptions[] = {tr(STR_CONFIRM)};
+    optionPopup_.show(tr(STR_WEREAD_BATCH_NOTHING), okOptions, 1, 0, [this](int) { requestUpdate(); });
+    optionPopupClosing_ = false;
+    requestUpdate();
+    return;
+  }
+  resetShelfCoverLoading();
+  shelfSelected_.store(0);
+  state_.store(State::BatchSelect);
+  requestUpdate();
+}
+void WeReadActivity::handleBatchSelectInput() {
+  const int count = static_cast<int>(batchVisibleIndexes_.size());
+  const auto& metrics = UITheme::getInstance().getMetrics();
+  const auto layout = shelfGridLayout(renderer, mainContentBounds(), metrics.contentSidePadding, metrics.verticalSpacing);
+  const int itemsPerPage = layout.itemsPerPage;
+  if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+    state_.store(State::Home);
+    requestUpdate();
+    return;
+  }
+  if (mappedInput.wasLongPressed(MappedInputManager::Button::Confirm, kShelfPageHoldMs)) {
+    startBatchDownload();
+    return;
+  }
+  if (mappedInput.wasReleased(MappedInputManager::Button::NavPrevious)) {
+    if (count > 0) moveShelfSelection(ButtonNavigator::previousIndex(shelfSelected_.load(), count), itemsPerPage);
+    return;
+  }
+  if (mappedInput.wasReleased(MappedInputManager::Button::NavNext)) {
+    if (count > 0) moveShelfSelection(ButtonNavigator::nextIndex(shelfSelected_.load(), count), itemsPerPage);
+    return;
+  }
+  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
+    const int cursor = shelfSelected_.load();
+    if (cursor >= 0 && cursor < count) {
+      const int shelfIndex = batchVisibleIndexes_[cursor];
+      if (batchSelectedIndexes_.count(shelfIndex)) batchSelectedIndexes_.erase(shelfIndex);
+      else batchSelectedIndexes_.insert(shelfIndex);
+      requestUpdate();
+    }
+    return;
+  }
+}
+void WeReadActivity::startBatchDownload() {
+  if (batchSelectedIndexes_.empty()) return;
+  batchQueue_.clear();
+  for (const int idx : batchSelectedIndexes_) {
+    WeReadStore::ShelfRecord book;
+    if (readShelf(idx, book)) batchQueue_.push_back(book);
+  }
+  if (batchQueue_.empty()) return;
+  auto confirmation = makeUniqueNoThrow<ConfirmationActivity>(
+      renderer, mappedInput, tr(STR_WEREAD_BATCH_CONFIRM_HEADING), tr(STR_WEREAD_BATCH_CONFIRM_BODY));
+  if (!confirmation) return;
+  startActivityForResult(std::move(confirmation), [this](const ActivityResult& result) {
+    if (result.isCancelled) {
+      requestUpdate();
+      return;
+    }
+    batchQueueIndex_ = 0;
+    batchSuccess_ = 0;
+    batchFailed_ = 0;
+    pendingBook_ = batchQueue_[0];
+    if (WiFi.status() == WL_CONNECTED) startJob(Job::Download, &pendingBook_);
+    else connectThen(Job::Download, &pendingBook_);
+  });
+}
+void WeReadActivity::startNextBatchItem() {
+  pendingBook_ = batchQueue_[batchQueueIndex_];
+  if (WiFi.status() == WL_CONNECTED) startJob(Job::Download, &pendingBook_);
+  else connectThen(Job::Download, &pendingBook_);
+}
+void WeReadActivity::finishBatchDownload() {
+  const uint32_t success = batchSuccess_;
+  const uint32_t failed = batchFailed_;
+  batchQueue_.clear();
+  batchSelectedIndexes_.clear();
+  batchQueueIndex_ = 0;
+  batchSuccess_ = 0;
+  batchFailed_ = 0;
+  refreshShelf();
+  state_.store(State::Home);
+  requestUpdateAndWait();
+  char title[96];
+  snprintf(title, sizeof(title), tr(STR_WEREAD_BATCH_RESULT), static_cast<unsigned>(success),
+           static_cast<unsigned>(failed));
+  const char* okOptions[] = {tr(STR_CONFIRM)};
+  optionPopup_.show(title, okOptions, 1, 0, [this](int) { requestUpdate(); });
+  optionPopupClosing_ = false;
+  requestUpdate();
+}
+
 void WeReadActivity::handleManageInput() {
   const auto activate = [this] {
     switch (kManageEntries[manageSelected_].action) {
@@ -1553,6 +1690,9 @@ void WeReadActivity::handleManageInput() {
         return;
       case ManageAction::ClearCache:
         promptClearCache();
+        return;
+      case ManageAction::BatchDownload:
+        enterBatchSelect();
         return;
       case ManageAction::Logout:
         promptLogout();
@@ -1892,6 +2032,9 @@ void WeReadActivity::loop() {
       if (state_.load() != State::DetailCoverLoading) return;
       advanceJob();
       return;
+    case State::BatchSelect:
+      handleBatchSelectInput();
+      return;
     case State::Introduction:
       handleIntroductionInput();
       return;
@@ -1954,7 +2097,8 @@ void WeReadActivity::loop() {
 bool WeReadActivity::isBusy(const State state) {
   return state == State::Connecting || state == State::Qr || state == State::LoginConfirmed ||
          state == State::Syncing || state == State::DetailLoading || state == State::DetailCoverLoading ||
-         state == State::Downloading || state == State::Cancelling || state == State::ClearingCache;
+         state == State::Downloading || state == State::Cancelling || state == State::ClearingCache ||
+         state == State::BatchSelect;
 }
 
 const char* WeReadActivity::errorMessage() const {
@@ -2124,16 +2268,19 @@ void WeReadActivity::drawDisclaimer(const Rect& content) {
 }
 
 void WeReadActivity::drawShelfGrid(const Rect& content, const int selectedIndex, const int frameSelection,
-                                   const bool contentFocused) {
+                                   const bool contentFocused, const std::set<int>* checkedIndexes,
+                                   const std::vector<int>* visibleIndexes) {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const auto layout = shelfGridLayout(renderer, content, metrics.contentSidePadding, metrics.verticalSpacing);
-  const int count = static_cast<int>(std::min<uint32_t>(shelfCount_, INT32_MAX));
+  const int count = visibleIndexes ? static_cast<int>(visibleIndexes->size())
+                                   : static_cast<int>(std::min<uint32_t>(shelfCount_, INT32_MAX));
   const int page = selectedIndex / layout.itemsPerPage;
   const int pageStart = page * layout.itemsPerPage;
   const int pageEnd = std::min(pageStart + layout.itemsPerPage, count);
   const bool incrementalFrame = frameSelection >= pageStart && frameSelection < pageEnd;
 
   const auto drawItem = [&](const int index, const bool selected) {
+    const int shelfIndex = visibleIndexes ? (*visibleIndexes)[index] : index;
     const auto geometry = weReadShelfItemGeometry(content, layout, pageStart, pageEnd, index);
     const Rect cover = geometry.cover;
     const Rect itemBounds = geometry.hit;
@@ -2147,10 +2294,17 @@ void WeReadActivity::drawShelfGrid(const Rect& content, const int selectedIndex,
     }
 
     WeReadStore::ShelfRecord book;
-    if (!readShelf(index, book)) return;
+    if (!readShelf(shelfIndex, book)) return;
 
     const bool coverDrawn = drawCachedCover(renderer, WeReadStore::bookDirectory(book.bookId), cover);
     renderer.drawRect(cover.x, cover.y, cover.width, cover.height);
+    if (checkedIndexes && checkedIndexes->count(shelfIndex)) {
+      const int bs = 16;
+      const int bx = cover.x + cover.width - bs - 2;
+      const int by = cover.y + 2;
+      renderer.fillRect(bx, by, bs, bs, true);
+      renderer.fillRect(bx + 4, by + 4, bs - 8, bs - 8, false);
+    }
     if (!coverDrawn) {
       renderer.drawIcon(CoverIcon, cover.x + (cover.width - 32) / 2, cover.y + (cover.height - 32) / 2, 32);
     }
@@ -2350,7 +2504,7 @@ void WeReadActivity::render(RenderLock&&) {
   const MainFocus mainFocus = mainFocus_.load();
   const int shelfSelection = shelfSelected_.load();
   const Rect content = state == State::Disclaimer ? disclaimerContentBounds()
-                                                  : (state == State::Home ? mainContentBounds() : contentBounds());
+                                                  : ((state == State::Home || state == State::BatchSelect) ? mainContentBounds() : contentBounds());
   const bool showingShelf = state == State::Home && mainTab == MainTab::Shelf;
   const int shelfItems = showingShelf && shelfCount_ > 0 ? shelfItemsPerPage() : 0;
   const int shelfFrameSelection = shelfFrameSelection_;
@@ -2387,6 +2541,9 @@ void WeReadActivity::render(RenderLock&&) {
     case State::ClearingCache:
     case State::CacheCleared:
     case State::CacheClearError:
+      break;
+    case State::BatchSelect:
+      header = tr(STR_WEREAD_MENU_BATCH_DOWNLOAD);
       break;
   }
   const Rect safe = UITheme::getInstance().getScreenSafeArea(renderer, true, false);
@@ -2432,6 +2589,14 @@ void WeReadActivity::render(RenderLock&&) {
       break;
     case State::Introduction:
       drawIntroduction(content);
+      break;
+    case State::BatchSelect:
+      if (batchVisibleIndexes_.empty()) {
+        GUI.drawPopup(renderer, tr(STR_WEREAD_BATCH_EMPTY));
+      } else {
+        drawShelfGrid(content, shelfSelection, kNoShelfSelection, true, &batchSelectedIndexes_,
+                      &batchVisibleIndexes_);
+      }
       break;
     case State::Qr: {
       if (!qrUrl_[0]) {

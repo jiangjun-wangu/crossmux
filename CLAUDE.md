@@ -160,10 +160,29 @@ ESP32-S3R8 / 512KB SRAM + 8MB PSRAM / 16MB Flash（app 6.4MB）/ 3.97" 800x480 4
 4. `git push origin main`
 5. `git log --oneline -3` + `git status --short` 确认
 
-### 文档追加规范
+### 文档追加/新建规范
 
-**一律用 Python 脚本**（写 `.py` 文件再运行），不用 heredoc / `cat >>`。
-原因：长 heredoc 在 WSL 会话中会被截断，导致内容丢失。
+**用 printf 逐行追加，禁止 heredoc。**
+原因：heredoc 在 WSL 会被截断，终端卡在 > 或内容丢失。
+
+标准写法：
+
+    # 新建文件（每次一小段）
+    printf '%s\n' '第一行' '第二行' > /tmp/doc.md
+
+    # 追加到已有文件
+    printf '%s\n' '追加内容' >> /tmp/doc.md
+
+    # 复制到目标
+    cp /tmp/doc.md docs/xxx.md
+
+    # 验证
+    wc -l docs/xxx.md
+
+禁止：
+- cat > file <<EOF ... EOF
+- python3 -c "..." < <(cat <<MARKER ...)
+- 一次追加超过 20 行
 
 ### 烧录规范
 
